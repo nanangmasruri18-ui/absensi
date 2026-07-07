@@ -1,0 +1,8 @@
+{
+  "name": "Aplikasi Absensi Siswa SD",
+  "description": "Sistem Absensi Siswa Sekolah Dasar dengan Hak Akses Admin dan Guru, fitur Import/Export Excel, cetak PDF, dan Laporan Rekapitulasi Lengkap.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
