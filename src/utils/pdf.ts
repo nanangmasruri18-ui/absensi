@@ -33,13 +33,13 @@ export function generateMonthlyPDF({
   const doc = new jsPDF({
     orientation: 'landscape',
     unit: 'mm',
-    format: [215, 330] // HVS F4 / Folio paper size (330 mm width x 215 mm height)
+    format: [215.9, 330.2] // 13 x 8.5 inches landscape (330.2 mm width x 215.9 mm height)
   });
 
-  const pageWidth = 330;
-  const pageHeight = 215;
+  const pageWidth = 330.2;
+  const pageHeight = 215.9;
   const marginX = 10;
-  const contentWidth = pageWidth - (marginX * 2); // 310mm
+  const contentWidth = pageWidth - (marginX * 2); // 310.2mm
 
   // Title Headers
   doc.setTextColor(15, 23, 42); // slate-900 sharp dark text
@@ -271,11 +271,11 @@ export function generateSemesterPDF({
   const doc = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
-    format: [215, 330] // HVS F4 / Folio paper size (215 mm width x 330 mm height)
+    format: [215.9, 330.2] // 13 x 8.5 inches portrait (215.9 mm width x 330.2 mm height)
   });
 
-  const pageWidth = 215;
-  const pageHeight = 330;
+  const pageWidth = 215.9;
+  const pageHeight = 330.2;
   const marginX = 12;
 
   doc.setTextColor(15, 23, 42); // slate-900 sharp dark text
