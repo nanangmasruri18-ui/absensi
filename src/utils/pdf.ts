@@ -33,31 +33,32 @@ export function generateMonthlyPDF({
   const doc = new jsPDF({
     orientation: 'landscape',
     unit: 'mm',
-    format: 'a4'
+    format: [215, 330] // HVS F4 / Folio paper size (330 mm width x 215 mm height)
   });
 
-  const pageWidth = 297;
-  const marginX = 12;
-  const contentWidth = pageWidth - (marginX * 2); // 273mm
+  const pageWidth = 330;
+  const pageHeight = 215;
+  const marginX = 10;
+  const contentWidth = pageWidth - (marginX * 2); // 310mm
 
   // Title Headers
   doc.setTextColor(15, 23, 42); // slate-900 sharp dark text
   doc.setFont('Helvetica', 'bold');
-  doc.setFontSize(15);
+  doc.setFontSize(16);
   doc.text('LAPORAN ABSENSI SISWA BULANAN', pageWidth / 2, 14, { align: 'center' });
   
-  doc.setFontSize(13);
+  doc.setFontSize(13.5);
   doc.text(school.name.toUpperCase(), pageWidth / 2, 20.5, { align: 'center' });
   
   doc.setFont('Helvetica', 'normal');
-  doc.setFontSize(9);
+  doc.setFontSize(9.5);
   doc.text(`NPSN: ${school.npsn}  |  Alamat: ${school.address}`, pageWidth / 2, 25.5, { align: 'center' });
   
   // Decorative double header line (Thick main line + thin accent line)
   doc.setDrawColor(15, 23, 42);
-  doc.setLineWidth(1.0);
+  doc.setLineWidth(1.2);
   doc.line(marginX, 28.5, pageWidth - marginX, 28.5);
-  doc.setLineWidth(0.3);
+  doc.setLineWidth(0.4);
   doc.line(marginX, 29.5, pageWidth - marginX, 29.5);
 
   // Metadata block left
@@ -109,25 +110,28 @@ export function generateMonthlyPDF({
     bodyData.push(row);
   });
 
-  // Calculate dynamic column stylings with readable clear widths
+  // Calculate dynamic column stylings for F4 (310mm total printable width)
+  const fixedColsWidth = 10 + 25 + 58 + 8 + 30; // 131mm for No, NISN, Nama, L/P, Summary
+  const dateColWidth = Math.floor(((310 - fixedColsWidth) / daysInMonth) * 100) / 100; // ~5.77mm per day for 31 days
+
   const columnStyles: any = {
-    0: { cellWidth: 8, halign: 'center' }, // No
-    1: { cellWidth: 17, halign: 'center', fontStyle: 'bold' }, // NISN
-    2: { cellWidth: 42, fontStyle: 'bold' }, // Nama Siswa
-    3: { cellWidth: 7, halign: 'center' }, // L/P
+    0: { cellWidth: 10, halign: 'center' }, // No
+    1: { cellWidth: 25, halign: 'center', fontStyle: 'bold' }, // NISN
+    2: { cellWidth: 58, fontStyle: 'bold' }, // Nama Siswa
+    3: { cellWidth: 8, halign: 'center' }, // L/P
   };
 
   // Remaining date columns are 1 to daysInMonth, plus 4 summary cols
   const startIndex = 4;
   const endIndex = startIndex + daysInMonth;
   
-  // Date cells width (5.2mm per date column for up to 31 days)
+  // Date cells width
   for (let i = startIndex; i < endIndex; i++) {
-    columnStyles[i] = { cellWidth: 5.2, halign: 'center' };
+    columnStyles[i] = { cellWidth: dateColWidth, halign: 'center' };
   }
   // H S I A cells width
   for (let i = endIndex; i < endIndex + 4; i++) {
-    columnStyles[i] = { cellWidth: 7, halign: 'center', fontStyle: 'bold' };
+    columnStyles[i] = { cellWidth: 7.5, halign: 'center', fontStyle: 'bold' };
   }
 
   // Draw table with jsPDF AutoTable
@@ -138,22 +142,22 @@ export function generateMonthlyPDF({
     body: bodyData,
     theme: 'grid',
     styles: {
-      fontSize: 7.5,
+      fontSize: 8,
       cellPadding: 1.2,
       overflow: 'ellipsize',
       lineColor: [30, 41, 59], // sharp slate-800 borders
-      lineWidth: 0.25, // clear crisp grid lines
+      lineWidth: 0.3, // thicker, crisp grid lines
       textColor: [15, 23, 42], // pure dark readable text
       font: 'Helvetica'
     },
     headStyles: {
       fillColor: [30, 58, 138], // rich deep blue header background
       textColor: [255, 255, 255],
-      fontSize: 8,
+      fontSize: 8.5,
       fontStyle: 'bold',
       halign: 'center',
       lineColor: [15, 23, 42],
-      lineWidth: 0.35
+      lineWidth: 0.4
     },
     columnStyles: columnStyles,
     didParseCell: (data) => {
@@ -209,10 +213,10 @@ export function generateMonthlyPDF({
 
   // Calculate coordinates for bottom-right signature block
   const finalY = (doc as any).lastAutoTable.finalY || 120;
-  const signatureSpaceY = Math.min(finalY + 12, 170); // ensure stays inside page bounds
+  const signatureSpaceY = Math.min(finalY + 14, 165); // ensure stays inside page bounds
 
   // Sign off right-aligned
-  const textX = 225;
+  const textX = 245;
   doc.setTextColor(15, 23, 42);
   doc.setFontSize(10);
   doc.setFont('Helvetica', 'normal');
@@ -235,7 +239,7 @@ export function generateMonthlyPDF({
 }
 
 /**
- * Generates and downloads a Semester Attendance PDF Report (Portrait)
+ * Generates and downloads a Semester Attendance PDF Report (Portrait F4)
  */
 export function generateSemesterPDF({
   school,
@@ -267,29 +271,30 @@ export function generateSemesterPDF({
   const doc = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
-    format: 'a4'
+    format: [215, 330] // HVS F4 / Folio paper size (215 mm width x 330 mm height)
   });
 
-  const pageWidth = 210;
+  const pageWidth = 215;
+  const pageHeight = 330;
   const marginX = 12;
 
   doc.setTextColor(15, 23, 42); // slate-900 sharp dark text
   doc.setFont('Helvetica', 'bold');
-  doc.setFontSize(15);
+  doc.setFontSize(15.5);
   doc.text('LAPORAN ABSENSI REKAPITULASI SEMESTER', pageWidth / 2, 14, { align: 'center' });
   
-  doc.setFontSize(13);
+  doc.setFontSize(13.5);
   doc.text(school.name.toUpperCase(), pageWidth / 2, 20.5, { align: 'center' });
   
   doc.setFont('Helvetica', 'normal');
-  doc.setFontSize(9);
+  doc.setFontSize(9.5);
   doc.text(`NPSN: ${school.npsn}  |  Alamat: ${school.address}`, pageWidth / 2, 25.5, { align: 'center' });
   
   // Double header line for formal presentation
   doc.setDrawColor(15, 23, 42);
-  doc.setLineWidth(1.0);
+  doc.setLineWidth(1.2);
   doc.line(marginX, 28.5, pageWidth - marginX, 28.5);
-  doc.setLineWidth(0.3);
+  doc.setLineWidth(0.4);
   doc.line(marginX, 29.5, pageWidth - marginX, 29.5);
 
   // Metadata
@@ -319,17 +324,17 @@ export function generateSemesterPDF({
     body: bodyData,
     theme: 'grid',
     styles: {
-      fontSize: 9,
-      cellPadding: 2.2,
+      fontSize: 9.5,
+      cellPadding: 2.5,
       lineColor: [30, 41, 59], // sharp slate-800 borders
-      lineWidth: 0.3, // thicker, clearer grid lines
+      lineWidth: 0.35, // thicker, clearer grid lines
       textColor: [15, 23, 42], // sharp black text
       font: 'Helvetica'
     },
     headStyles: {
       fillColor: [30, 58, 138], // rich dark indigo/blue header
       textColor: [255, 255, 255],
-      fontSize: 9.5,
+      fontSize: 10,
       fontStyle: 'bold',
       halign: 'center',
       lineColor: [15, 23, 42],
@@ -337,9 +342,9 @@ export function generateSemesterPDF({
     },
     columnStyles: {
       0: { cellWidth: 10, halign: 'center' },
-      1: { cellWidth: 23, halign: 'center', fontStyle: 'bold' },
-      2: { cellWidth: 58, fontStyle: 'bold' },
-      3: { cellWidth: 12, halign: 'center' },
+      1: { cellWidth: 26, halign: 'center', fontStyle: 'bold' },
+      2: { cellWidth: 62, fontStyle: 'bold' },
+      3: { cellWidth: 10, halign: 'center' },
       4: { cellWidth: 15, halign: 'center', fontStyle: 'bold' },
       5: { cellWidth: 15, halign: 'center' },
       6: { cellWidth: 15, halign: 'center' },
@@ -349,9 +354,9 @@ export function generateSemesterPDF({
   });
 
   const finalY = (doc as any).lastAutoTable.finalY || 120;
-  const signatureSpaceY = Math.min(finalY + 14, 235); // ensure fits on page
+  const signatureSpaceY = Math.min(finalY + 15, 260); // ensure fits on page
 
-  const textX = 135;
+  const textX = 138;
   doc.setTextColor(15, 23, 42);
   doc.setFontSize(10);
   doc.setFont('Helvetica', 'normal');
