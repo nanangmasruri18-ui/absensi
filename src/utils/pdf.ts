@@ -36,33 +36,41 @@ export function generateMonthlyPDF({
     format: 'a4'
   });
 
+  const pageWidth = 297;
+  const marginX = 12;
+  const contentWidth = pageWidth - (marginX * 2); // 273mm
+
   // Title Headers
+  doc.setTextColor(15, 23, 42); // slate-900 sharp dark text
   doc.setFont('Helvetica', 'bold');
-  doc.setFontSize(14);
-  doc.text('LAPORAN ABSENSI SISWA BULANAN', 148, 14, { align: 'center' });
+  doc.setFontSize(15);
+  doc.text('LAPORAN ABSENSI SISWA BULANAN', pageWidth / 2, 14, { align: 'center' });
   
-  doc.setFontSize(12);
-  doc.text(school.name, 148, 20, { align: 'center' });
+  doc.setFontSize(13);
+  doc.text(school.name.toUpperCase(), pageWidth / 2, 20.5, { align: 'center' });
   
   doc.setFont('Helvetica', 'normal');
-  doc.setFontSize(8);
-  doc.text(`NPSN: ${school.npsn} | Alamat: ${school.address}`, 148, 25, { align: 'center' });
+  doc.setFontSize(9);
+  doc.text(`NPSN: ${school.npsn}  |  Alamat: ${school.address}`, pageWidth / 2, 25.5, { align: 'center' });
   
-  // Decorative line
-  doc.setLineWidth(0.5);
-  doc.line(15, 28, 282, 28);
+  // Decorative double header line (Thick main line + thin accent line)
+  doc.setDrawColor(15, 23, 42);
+  doc.setLineWidth(1.0);
+  doc.line(marginX, 28.5, pageWidth - marginX, 28.5);
+  doc.setLineWidth(0.3);
+  doc.line(marginX, 29.5, pageWidth - marginX, 29.5);
 
   // Metadata block left
   doc.setFont('Helvetica', 'bold');
-  doc.setFontSize(9);
-  doc.text(`Kelas / Rombel: ${className}`, 15, 34);
-  doc.text(`Wali Kelas: ${homeroomTeacherName || '-'}`, 15, 39);
+  doc.setFontSize(10);
+  doc.text(`Kelas / Rombel : ${className}`, marginX, 36);
+  doc.text(`Wali Kelas        : ${homeroomTeacherName || '-'}`, marginX, 41.5);
 
   // Metadata block right
   const monthLabel = `Bulan: ${monthName.toUpperCase()}`;
   const yearLabel = `Tahun Pelajaran: ${year}/${year + 1}`;
-  doc.text(monthLabel, 282, 34, { align: 'right' });
-  doc.text(yearLabel, 282, 39, { align: 'right' });
+  doc.text(monthLabel, pageWidth - marginX, 36, { align: 'right' });
+  doc.text(yearLabel, pageWidth - marginX, 41.5, { align: 'right' });
 
   // Columns: No, NISN, Nama, L/P, [1..31], H, S, I, A
   const headers: string[] = ['No', 'NISN', 'Nama Siswa', 'L/P'];
@@ -101,11 +109,11 @@ export function generateMonthlyPDF({
     bodyData.push(row);
   });
 
-  // Calculate dynamic column stylings with very narrow date widths
+  // Calculate dynamic column stylings with readable clear widths
   const columnStyles: any = {
-    0: { cellWidth: 7, halign: 'center' }, // No
-    1: { cellWidth: 15, halign: 'center' }, // NISN
-    2: { cellWidth: 35 }, // Nama Siswa
+    0: { cellWidth: 8, halign: 'center' }, // No
+    1: { cellWidth: 17, halign: 'center', fontStyle: 'bold' }, // NISN
+    2: { cellWidth: 42, fontStyle: 'bold' }, // Nama Siswa
     3: { cellWidth: 7, halign: 'center' }, // L/P
   };
 
@@ -113,33 +121,39 @@ export function generateMonthlyPDF({
   const startIndex = 4;
   const endIndex = startIndex + daysInMonth;
   
-  // Date cells width
+  // Date cells width (5.2mm per date column for up to 31 days)
   for (let i = startIndex; i < endIndex; i++) {
-    columnStyles[i] = { cellWidth: 5.4, halign: 'center' };
+    columnStyles[i] = { cellWidth: 5.2, halign: 'center' };
   }
   // H S I A cells width
   for (let i = endIndex; i < endIndex + 4; i++) {
-    columnStyles[i] = { cellWidth: 6, halign: 'center', fontStyle: 'bold' };
+    columnStyles[i] = { cellWidth: 7, halign: 'center', fontStyle: 'bold' };
   }
 
   // Draw table with jsPDF AutoTable
   autoTable(doc, {
-    startY: 44,
+    startY: 46,
+    margin: { left: marginX, right: marginX },
     head: [headers],
     body: bodyData,
     theme: 'grid',
     styles: {
-      fontSize: 5.5,
-      cellPadding: 0.8,
+      fontSize: 7.5,
+      cellPadding: 1.2,
       overflow: 'ellipsize',
-      lineColor: [200, 200, 200],
-      textColor: [30, 30, 30]
+      lineColor: [30, 41, 59], // sharp slate-800 borders
+      lineWidth: 0.25, // clear crisp grid lines
+      textColor: [15, 23, 42], // pure dark readable text
+      font: 'Helvetica'
     },
     headStyles: {
-      fillColor: [59, 130, 246], // blue accent
+      fillColor: [30, 58, 138], // rich deep blue header background
       textColor: [255, 255, 255],
-      fontSize: 5.5,
+      fontSize: 8,
+      fontStyle: 'bold',
       halign: 'center',
+      lineColor: [15, 23, 42],
+      lineWidth: 0.35
     },
     columnStyles: columnStyles,
     didParseCell: (data) => {
@@ -161,28 +175,31 @@ export function generateMonthlyPDF({
 
         if (isSun) {
           data.cell.styles.fillColor = [254, 226, 226]; // light red
-          data.cell.styles.textColor = [220, 38, 38];
+          data.cell.styles.textColor = [185, 28, 28]; // bold dark red
+          data.cell.styles.fontStyle = 'bold';
           if (val === '-' || !val) {
             data.cell.text = ['M']; // 'M' for Minggu
           }
         } else if (isHol) {
           data.cell.styles.fillColor = [254, 243, 199]; // light yellow (holiday)
-          data.cell.styles.textColor = [217, 119, 6];
+          data.cell.styles.textColor = [180, 83, 9]; // dark amber
+          data.cell.styles.fontStyle = 'bold';
           if (val === '-' || !val) {
             data.cell.text = ['L']; // 'L' for Libur
           }
         } else {
           // Status styling
+          data.cell.styles.fontStyle = 'bold';
           if (val === 'H') {
-            data.cell.styles.textColor = [16, 185, 129]; // green
+            data.cell.styles.textColor = [4, 120, 87]; // bold emerald green
           } else if (val === 'S') {
-            data.cell.styles.textColor = [59, 130, 246]; // blue
+            data.cell.styles.textColor = [29, 78, 216]; // bold blue
             data.cell.styles.fillColor = [239, 246, 255];
           } else if (val === 'I') {
-            data.cell.styles.textColor = [245, 158, 11]; // orange
+            data.cell.styles.textColor = [217, 119, 6]; // bold amber
             data.cell.styles.fillColor = [254, 243, 199];
           } else if (val === 'A') {
-            data.cell.styles.textColor = [239, 68, 68]; // red
+            data.cell.styles.textColor = [220, 38, 38]; // bold red
             data.cell.styles.fillColor = [254, 226, 226];
           }
         }
@@ -192,26 +209,29 @@ export function generateMonthlyPDF({
 
   // Calculate coordinates for bottom-right signature block
   const finalY = (doc as any).lastAutoTable.finalY || 120;
-  const signatureSpaceY = finalY + 12;
+  const signatureSpaceY = Math.min(finalY + 12, 170); // ensure stays inside page bounds
 
   // Sign off right-aligned
-  const textX = 230;
-  doc.setFontSize(9);
+  const textX = 225;
+  doc.setTextColor(15, 23, 42);
+  doc.setFontSize(10);
   doc.setFont('Helvetica', 'normal');
   const dStamp = `Gelora, ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}`;
   doc.text(dStamp, textX, signatureSpaceY);
-  doc.text('Guru Kelas / Wali Kelas,', textX, signatureSpaceY + 5);
+  doc.text('Guru Kelas / Wali Kelas,', textX, signatureSpaceY + 5.5);
 
-  // Leave standard clean space for physics sign
+  // Signer name and NIP
   doc.setFont('Helvetica', 'bold');
+  doc.setFontSize(10.5);
   const teacherLabel = homeroomTeacherName || '( ............................................... )';
-  doc.text(teacherLabel, textX, signatureSpaceY + 25);
-  doc.setFont('Helvetica', 'normal');
+  doc.text(teacherLabel, textX, signatureSpaceY + 26);
+  doc.setFont('Helvetica', 'bold');
+  doc.setFontSize(9.5);
   const nipLabel = homeroomTeacherNip ? `NIP. ${homeroomTeacherNip}` : 'NIP. ...............................................';
-  doc.text(nipLabel, textX, signatureSpaceY + 29);
+  doc.text(nipLabel, textX, signatureSpaceY + 31);
 
-  // Preview before download (we can save it)
-  doc.save(`Absensi_Siswa_Bulanan_${className.replace(' ', '_')}_${monthName}_${year}.pdf`);
+  // Download PDF
+  doc.save(`Absensi_Siswa_Bulanan_${className.replace(/\s+/g, '_')}_${monthName}_${year}.pdf`);
 }
 
 /**
@@ -250,26 +270,34 @@ export function generateSemesterPDF({
     format: 'a4'
   });
 
+  const pageWidth = 210;
+  const marginX = 12;
+
+  doc.setTextColor(15, 23, 42); // slate-900 sharp dark text
   doc.setFont('Helvetica', 'bold');
-  doc.setFontSize(14);
-  doc.text('LAPORAN ABSENSI REKAPITULASI SEMESTER', 105, 14, { align: 'center' });
+  doc.setFontSize(15);
+  doc.text('LAPORAN ABSENSI REKAPITULASI SEMESTER', pageWidth / 2, 14, { align: 'center' });
   
-  doc.setFontSize(12);
-  doc.text(school.name, 105, 20, { align: 'center' });
+  doc.setFontSize(13);
+  doc.text(school.name.toUpperCase(), pageWidth / 2, 20.5, { align: 'center' });
   
   doc.setFont('Helvetica', 'normal');
-  doc.setFontSize(8);
-  doc.text(`NPSN: ${school.npsn} | Alamat: ${school.address}`, 105, 25, { align: 'center' });
+  doc.setFontSize(9);
+  doc.text(`NPSN: ${school.npsn}  |  Alamat: ${school.address}`, pageWidth / 2, 25.5, { align: 'center' });
   
-  doc.setLineWidth(0.5);
-  doc.line(15, 28, 195, 28);
+  // Double header line for formal presentation
+  doc.setDrawColor(15, 23, 42);
+  doc.setLineWidth(1.0);
+  doc.line(marginX, 28.5, pageWidth - marginX, 28.5);
+  doc.setLineWidth(0.3);
+  doc.line(marginX, 29.5, pageWidth - marginX, 29.5);
 
   // Metadata
   doc.setFont('Helvetica', 'bold');
-  doc.setFontSize(9);
-  doc.text(`Kelas Rombel: ${className}`, 15, 34);
-  doc.text(`Semester: ${semester}`, 15, 39);
-  doc.text(`Tahun Pelajaran: ${academicYear}`, 195, 34, { align: 'right' });
+  doc.setFontSize(10);
+  doc.text(`Kelas Rombel  : ${className}`, marginX, 36);
+  doc.text(`Semester       : ${semester}`, marginX, 41.5);
+  doc.text(`Tahun Pelajaran : ${academicYear}`, pageWidth - marginX, 36, { align: 'right' });
 
   const headers = ['No', 'NISN', 'Nama Siswa', 'L/P', 'Hadir', 'Sakit', 'Izin', 'Alfa', 'Persentase'];
   const bodyData = rows.map((r) => [
@@ -285,47 +313,61 @@ export function generateSemesterPDF({
   ]);
 
   autoTable(doc, {
-    startY: 44,
+    startY: 46,
+    margin: { left: marginX, right: marginX },
     head: [headers],
     body: bodyData,
     theme: 'grid',
     styles: {
-      fontSize: 8,
-      cellPadding: 2,
+      fontSize: 9,
+      cellPadding: 2.2,
+      lineColor: [30, 41, 59], // sharp slate-800 borders
+      lineWidth: 0.3, // thicker, clearer grid lines
+      textColor: [15, 23, 42], // sharp black text
+      font: 'Helvetica'
     },
     headStyles: {
-      fillColor: [79, 70, 229], // indigo accent
+      fillColor: [30, 58, 138], // rich dark indigo/blue header
       textColor: [255, 255, 255],
-      halign: 'center'
+      fontSize: 9.5,
+      fontStyle: 'bold',
+      halign: 'center',
+      lineColor: [15, 23, 42],
+      lineWidth: 0.4
     },
     columnStyles: {
       0: { cellWidth: 10, halign: 'center' },
-      1: { cellWidth: 22, halign: 'center' },
-      2: { cellWidth: 55 },
+      1: { cellWidth: 23, halign: 'center', fontStyle: 'bold' },
+      2: { cellWidth: 58, fontStyle: 'bold' },
       3: { cellWidth: 12, halign: 'center' },
-      4: { cellWidth: 15, halign: 'center' },
+      4: { cellWidth: 15, halign: 'center', fontStyle: 'bold' },
       5: { cellWidth: 15, halign: 'center' },
       6: { cellWidth: 15, halign: 'center' },
       7: { cellWidth: 15, halign: 'center' },
-      8: { cellWidth: 22, halign: 'center' },
+      8: { cellWidth: 23, halign: 'center', fontStyle: 'bold' },
     }
   });
 
   const finalY = (doc as any).lastAutoTable.finalY || 120;
-  const signatureSpaceY = finalY + 15;
+  const signatureSpaceY = Math.min(finalY + 14, 235); // ensure fits on page
 
-  const textX = 140;
-  doc.setFontSize(9);
+  const textX = 135;
+  doc.setTextColor(15, 23, 42);
+  doc.setFontSize(10);
+  doc.setFont('Helvetica', 'normal');
   const dStamp = `Gelora, ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}`;
   doc.text(dStamp, textX, signatureSpaceY);
-  doc.text('Guru Kelas / Wali Kelas,', textX, signatureSpaceY + 5);
+  doc.text('Guru Kelas / Wali Kelas,', textX, signatureSpaceY + 5.5);
 
   doc.setFont('Helvetica', 'bold');
+  doc.setFontSize(10.5);
   const teacherLabel = homeroomTeacherName || '( ............................................... )';
-  doc.text(teacherLabel, textX, signatureSpaceY + 25);
-  doc.setFont('Helvetica', 'normal');
+  doc.text(teacherLabel, textX, signatureSpaceY + 26);
+  doc.setFont('Helvetica', 'bold');
+  doc.setFontSize(9.5);
   const nipLabel = homeroomTeacherNip ? `NIP. ${homeroomTeacherNip}` : 'NIP. ...............................................';
-  doc.text(nipLabel, textX, signatureSpaceY + 29);
+  doc.text(nipLabel, textX, signatureSpaceY + 31);
 
-  doc.save(`Absensi_Siswa_Semester_${className.replace(' ', '_')}_Semester_${semester.replace(' ', '_')}.pdf`);
+  doc.save(`Absensi_Siswa_Semester_${className.replace(/\s+/g, '_')}_Semester_${semester.replace(/\s+/g, '_')}.pdf`);
 }
+
