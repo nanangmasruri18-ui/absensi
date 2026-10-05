@@ -253,12 +253,39 @@ class LocalDB {
 
   // ATTENDANCE
   getAttendance(): Attendance[] {
-    return JSON.parse(localStorage.getItem(KEYS.ATTENDANCE) || '[]');
+    try {
+      const raw = localStorage.getItem(KEYS.ATTENDANCE);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
   }
 
   saveAttendance(attendances: Attendance[]) {
-    localStorage.setItem(KEYS.ATTENDANCE, JSON.stringify(attendances));
-    pushToSupabase(KEYS.ATTENDANCE, attendances);
+    try {
+      localStorage.setItem(KEYS.ATTENDANCE, JSON.stringify(attendances));
+      pushToSupabase(KEYS.ATTENDANCE, attendances);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('absensi-updated', { detail: { count: attendances.length } }));
+      }
+    } catch (err) {
+      console.error('Error saving attendance:', err);
+    }
+  }
+
+  saveAttendanceForClassDate(classId: string, date: string, records: Attendance[]) {
+    try {
+      const all = this.getAttendance();
+      const filtered = all.filter((a) => !(a.classId === classId && a.date === date));
+      const updated = [...filtered, ...records];
+      this.saveAttendance(updated);
+      return true;
+    } catch (err) {
+      console.error('Error saving attendance for class date:', err);
+      return false;
+    }
   }
 
   // HELPER: Reset Database with default data

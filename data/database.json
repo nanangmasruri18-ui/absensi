@@ -1,0 +1,1767 @@
+{
+  "school": {
+    "name": "SD Negeri Gelora 01",
+    "address": "Jl. Pemuda No. 45, Kel. Gelora, Kec. Tanah Abang, Kota Jakarta Pusat, DKI Jakarta",
+    "npsn": "20103456",
+    "adminName": "Admin Gelora"
+  },
+  "classes": [
+    {
+      "id": "class-1a",
+      "name": "Kelas 1A",
+      "grade": "1",
+      "homeroomTeacherId": "teacher-guru1a"
+    },
+    {
+      "id": "class-1b",
+      "name": "Kelas 1B",
+      "grade": "1",
+      "homeroomTeacherId": "teacher-guru1b"
+    },
+    {
+      "id": "class-2a",
+      "name": "Kelas 2A",
+      "grade": "2",
+      "homeroomTeacherId": "teacher-guru2a"
+    },
+    {
+      "id": "class-2b",
+      "name": "Kelas 2B",
+      "grade": "2",
+      "homeroomTeacherId": ""
+    }
+  ],
+  "teachers": [
+    {
+      "id": "admin-1",
+      "nip": "197901012005011001",
+      "name": "Admin Gelora",
+      "gender": "L",
+      "username": "admin",
+      "passwordHash": "YWRtaW4xMjM=",
+      "assignedClassId": "",
+      "role": "admin"
+    },
+    {
+      "id": "teacher-guru1a",
+      "nip": "198503122010121001",
+      "name": "Budi Santoso, S.Pd.",
+      "gender": "L",
+      "username": "guru1a",
+      "passwordHash": "cGFzc3dvcmQxYQ==",
+      "assignedClassId": "class-1a",
+      "role": "guru"
+    },
+    {
+      "id": "teacher-guru1b",
+      "nip": "199008242015042002",
+      "name": "Siti Rahma, S.Pd.",
+      "gender": "P",
+      "username": "guru1b",
+      "passwordHash": "cGFzc3dvcmQxYg==",
+      "assignedClassId": "class-1b",
+      "role": "guru"
+    },
+    {
+      "id": "teacher-guru2a",
+      "nip": "198211052008011003",
+      "name": "Ahmad Dahlan, S.Pd.",
+      "gender": "L",
+      "username": "guru2a",
+      "passwordHash": "cGFzc3dvcmQyYQ==",
+      "assignedClassId": "class-2a",
+      "role": "guru"
+    }
+  ],
+  "students": [
+    {
+      "id": "std-1a-1",
+      "nis": "1001",
+      "nisn": "0015482310",
+      "name": "Ahmad Rafli",
+      "gender": "L",
+      "birthPlace": "Jakarta",
+      "birthDate": "2019-03-12",
+      "classId": "class-1a"
+    },
+    {
+      "id": "std-1a-2",
+      "nis": "1002",
+      "nisn": "0015482311",
+      "name": "Bunga Citra Lestari",
+      "gender": "P",
+      "birthPlace": "Bandung",
+      "birthDate": "2019-07-22",
+      "classId": "class-1a"
+    },
+    {
+      "id": "std-1a-3",
+      "nis": "1003",
+      "nisn": "0015482312",
+      "name": "Chandra Wijaya",
+      "gender": "L",
+      "birthPlace": "Bogor",
+      "birthDate": "2019-01-05",
+      "classId": "class-1a"
+    },
+    {
+      "id": "std-1a-4",
+      "nis": "1004",
+      "nisn": "0015482313",
+      "name": "Dian Sastrowardoyo",
+      "gender": "P",
+      "birthPlace": "Surabaya",
+      "birthDate": "2019-11-18",
+      "classId": "class-1a"
+    },
+    {
+      "id": "std-1a-5",
+      "nis": "1005",
+      "nisn": "0015482314",
+      "name": "Eko Prasetyo",
+      "gender": "L",
+      "birthPlace": "Solo",
+      "birthDate": "2019-05-30",
+      "classId": "class-1a"
+    },
+    {
+      "id": "std-1a-6",
+      "nis": "1006",
+      "nisn": "0015482315",
+      "name": "Farah Diva",
+      "gender": "P",
+      "birthPlace": "Yogyakarta",
+      "birthDate": "2019-08-14",
+      "classId": "class-1a"
+    },
+    {
+      "id": "std-1a-7",
+      "nis": "1007",
+      "nisn": "0015482316",
+      "name": "Gilang Ramadhan",
+      "gender": "L",
+      "birthPlace": "Semarang",
+      "birthDate": "2019-02-28",
+      "classId": "class-1a"
+    },
+    {
+      "id": "std-1a-8",
+      "nis": "1008",
+      "nisn": "0015482317",
+      "name": "Hesti Purwadinata",
+      "gender": "P",
+      "birthPlace": "Medan",
+      "birthDate": "2019-04-16",
+      "classId": "class-1a"
+    },
+    {
+      "id": "std-1a-9",
+      "nis": "1009",
+      "nisn": "0015482318",
+      "name": "Irwan Syah",
+      "gender": "L",
+      "birthPlace": "Palembang",
+      "birthDate": "2019-09-03",
+      "classId": "class-1a"
+    },
+    {
+      "id": "std-1a-10",
+      "nis": "1010",
+      "nisn": "0015482319",
+      "name": "Jelita Sejuba",
+      "gender": "P",
+      "birthPlace": "Denpasar",
+      "birthDate": "2019-10-10",
+      "classId": "class-1a"
+    },
+    {
+      "id": "std-1b-1",
+      "nis": "2001",
+      "nisn": "0025482320",
+      "name": "Kurnia Setiawan",
+      "gender": "L",
+      "birthPlace": "Jakarta",
+      "birthDate": "2019-04-12",
+      "classId": "class-1b"
+    },
+    {
+      "id": "std-1b-2",
+      "nis": "2002",
+      "nisn": "0025482321",
+      "name": "Larasati Putri",
+      "gender": "P",
+      "birthPlace": "Depok",
+      "birthDate": "2019-05-15",
+      "classId": "class-1b"
+    },
+    {
+      "id": "std-1b-3",
+      "nis": "2003",
+      "nisn": "0025482322",
+      "name": "Mochammad Akbar",
+      "gender": "L",
+      "birthPlace": "Bogor",
+      "birthDate": "2019-06-20",
+      "classId": "class-1b"
+    },
+    {
+      "id": "std-1b-4",
+      "nis": "2004",
+      "nisn": "0025482323",
+      "name": "Nabila Syakieb",
+      "gender": "P",
+      "birthPlace": "Bandung",
+      "birthDate": "2019-07-25",
+      "classId": "class-1b"
+    },
+    {
+      "id": "std-1b-5",
+      "nis": "2005",
+      "nisn": "0025482324",
+      "name": "Okto Maniani",
+      "gender": "L",
+      "birthPlace": "Jayapura",
+      "birthDate": "2019-10-05",
+      "classId": "class-1b"
+    },
+    {
+      "id": "std-2a-1",
+      "nis": "3001",
+      "nisn": "0035482330",
+      "name": "Pratama Arhan",
+      "gender": "L",
+      "birthPlace": "Blora",
+      "birthDate": "2018-12-21",
+      "classId": "class-2a"
+    },
+    {
+      "id": "std-2a-2",
+      "nis": "3002",
+      "nisn": "0035482331",
+      "name": "Rara Istiati",
+      "gender": "P",
+      "birthPlace": "Balikpapan",
+      "birthDate": "2018-09-11",
+      "classId": "class-2a"
+    },
+    {
+      "id": "std-2a-3",
+      "nis": "3003",
+      "nisn": "0035482332",
+      "name": "Saddil Ramdani",
+      "gender": "L",
+      "birthPlace": "Kendari",
+      "birthDate": "2018-01-02",
+      "classId": "class-2a"
+    }
+  ],
+  "holidays": [
+    {
+      "id": "hol-1",
+      "date": "2026-06-01",
+      "name": "Hari Lahir Pancasila",
+      "description": "Libur Nasional memperingati lahirnya Pancasila"
+    },
+    {
+      "id": "hol-2",
+      "date": "2026-06-17",
+      "name": "Tahun Baru Islam 1448 H",
+      "description": "Peringatan Hijriah baru 1 Muharram"
+    },
+    {
+      "id": "hol-3",
+      "date": "2026-08-17",
+      "name": "Hari Kemerdekaan RI",
+      "description": "HUT Kemerdekaan Republik Indonesia"
+    },
+    {
+      "id": "hol-4",
+      "date": "2026-05-01",
+      "name": "Hari Buruh Internasional",
+      "description": "Libur Hari Buruh sedunia"
+    }
+  ],
+  "attendance": [
+    {
+      "id": "class-1a-std-1a-1-2026-06-02",
+      "classId": "class-1a",
+      "studentId": "std-1a-1",
+      "date": "2026-06-02",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-2-2026-06-02",
+      "classId": "class-1a",
+      "studentId": "std-1a-2",
+      "date": "2026-06-02",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-3-2026-06-02",
+      "classId": "class-1a",
+      "studentId": "std-1a-3",
+      "date": "2026-06-02",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-4-2026-06-02",
+      "classId": "class-1a",
+      "studentId": "std-1a-4",
+      "date": "2026-06-02",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-5-2026-06-02",
+      "classId": "class-1a",
+      "studentId": "std-1a-5",
+      "date": "2026-06-02",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-6-2026-06-02",
+      "classId": "class-1a",
+      "studentId": "std-1a-6",
+      "date": "2026-06-02",
+      "status": "S",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-7-2026-06-02",
+      "classId": "class-1a",
+      "studentId": "std-1a-7",
+      "date": "2026-06-02",
+      "status": "S",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-8-2026-06-02",
+      "classId": "class-1a",
+      "studentId": "std-1a-8",
+      "date": "2026-06-02",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-9-2026-06-02",
+      "classId": "class-1a",
+      "studentId": "std-1a-9",
+      "date": "2026-06-02",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-10-2026-06-02",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-06-02",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-1-2026-06-03",
+      "classId": "class-1a",
+      "studentId": "std-1a-1",
+      "date": "2026-06-03",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-2-2026-06-03",
+      "classId": "class-1a",
+      "studentId": "std-1a-2",
+      "date": "2026-06-03",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-3-2026-06-03",
+      "classId": "class-1a",
+      "studentId": "std-1a-3",
+      "date": "2026-06-03",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-4-2026-06-03",
+      "classId": "class-1a",
+      "studentId": "std-1a-4",
+      "date": "2026-06-03",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-5-2026-06-03",
+      "classId": "class-1a",
+      "studentId": "std-1a-5",
+      "date": "2026-06-03",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-6-2026-06-03",
+      "classId": "class-1a",
+      "studentId": "std-1a-6",
+      "date": "2026-06-03",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-7-2026-06-03",
+      "classId": "class-1a",
+      "studentId": "std-1a-7",
+      "date": "2026-06-03",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-8-2026-06-03",
+      "classId": "class-1a",
+      "studentId": "std-1a-8",
+      "date": "2026-06-03",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-9-2026-06-03",
+      "classId": "class-1a",
+      "studentId": "std-1a-9",
+      "date": "2026-06-03",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-10-2026-06-03",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-06-03",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-1-2026-06-04",
+      "classId": "class-1a",
+      "studentId": "std-1a-1",
+      "date": "2026-06-04",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-2-2026-06-04",
+      "classId": "class-1a",
+      "studentId": "std-1a-2",
+      "date": "2026-06-04",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-3-2026-06-04",
+      "classId": "class-1a",
+      "studentId": "std-1a-3",
+      "date": "2026-06-04",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-4-2026-06-04",
+      "classId": "class-1a",
+      "studentId": "std-1a-4",
+      "date": "2026-06-04",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-5-2026-06-04",
+      "classId": "class-1a",
+      "studentId": "std-1a-5",
+      "date": "2026-06-04",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-6-2026-06-04",
+      "classId": "class-1a",
+      "studentId": "std-1a-6",
+      "date": "2026-06-04",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-7-2026-06-04",
+      "classId": "class-1a",
+      "studentId": "std-1a-7",
+      "date": "2026-06-04",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-8-2026-06-04",
+      "classId": "class-1a",
+      "studentId": "std-1a-8",
+      "date": "2026-06-04",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-9-2026-06-04",
+      "classId": "class-1a",
+      "studentId": "std-1a-9",
+      "date": "2026-06-04",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-10-2026-06-04",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-06-04",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-1-2026-06-05",
+      "classId": "class-1a",
+      "studentId": "std-1a-1",
+      "date": "2026-06-05",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-2-2026-06-05",
+      "classId": "class-1a",
+      "studentId": "std-1a-2",
+      "date": "2026-06-05",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-3-2026-06-05",
+      "classId": "class-1a",
+      "studentId": "std-1a-3",
+      "date": "2026-06-05",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-4-2026-06-05",
+      "classId": "class-1a",
+      "studentId": "std-1a-4",
+      "date": "2026-06-05",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-5-2026-06-05",
+      "classId": "class-1a",
+      "studentId": "std-1a-5",
+      "date": "2026-06-05",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-6-2026-06-05",
+      "classId": "class-1a",
+      "studentId": "std-1a-6",
+      "date": "2026-06-05",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-7-2026-06-05",
+      "classId": "class-1a",
+      "studentId": "std-1a-7",
+      "date": "2026-06-05",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-8-2026-06-05",
+      "classId": "class-1a",
+      "studentId": "std-1a-8",
+      "date": "2026-06-05",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-9-2026-06-05",
+      "classId": "class-1a",
+      "studentId": "std-1a-9",
+      "date": "2026-06-05",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-10-2026-06-05",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-06-05",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-1-2026-06-06",
+      "classId": "class-1a",
+      "studentId": "std-1a-1",
+      "date": "2026-06-06",
+      "status": "A",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-2-2026-06-06",
+      "classId": "class-1a",
+      "studentId": "std-1a-2",
+      "date": "2026-06-06",
+      "status": "A",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-3-2026-06-06",
+      "classId": "class-1a",
+      "studentId": "std-1a-3",
+      "date": "2026-06-06",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-4-2026-06-06",
+      "classId": "class-1a",
+      "studentId": "std-1a-4",
+      "date": "2026-06-06",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-5-2026-06-06",
+      "classId": "class-1a",
+      "studentId": "std-1a-5",
+      "date": "2026-06-06",
+      "status": "S",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-6-2026-06-06",
+      "classId": "class-1a",
+      "studentId": "std-1a-6",
+      "date": "2026-06-06",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-7-2026-06-06",
+      "classId": "class-1a",
+      "studentId": "std-1a-7",
+      "date": "2026-06-06",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-8-2026-06-06",
+      "classId": "class-1a",
+      "studentId": "std-1a-8",
+      "date": "2026-06-06",
+      "status": "S",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-9-2026-06-06",
+      "classId": "class-1a",
+      "studentId": "std-1a-9",
+      "date": "2026-06-06",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-10-2026-06-06",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-06-06",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-1-2026-06-08",
+      "classId": "class-1a",
+      "studentId": "std-1a-1",
+      "date": "2026-06-08",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-2-2026-06-08",
+      "classId": "class-1a",
+      "studentId": "std-1a-2",
+      "date": "2026-06-08",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-3-2026-06-08",
+      "classId": "class-1a",
+      "studentId": "std-1a-3",
+      "date": "2026-06-08",
+      "status": "A",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-4-2026-06-08",
+      "classId": "class-1a",
+      "studentId": "std-1a-4",
+      "date": "2026-06-08",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-5-2026-06-08",
+      "classId": "class-1a",
+      "studentId": "std-1a-5",
+      "date": "2026-06-08",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-6-2026-06-08",
+      "classId": "class-1a",
+      "studentId": "std-1a-6",
+      "date": "2026-06-08",
+      "status": "S",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-7-2026-06-08",
+      "classId": "class-1a",
+      "studentId": "std-1a-7",
+      "date": "2026-06-08",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-8-2026-06-08",
+      "classId": "class-1a",
+      "studentId": "std-1a-8",
+      "date": "2026-06-08",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-9-2026-06-08",
+      "classId": "class-1a",
+      "studentId": "std-1a-9",
+      "date": "2026-06-08",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-10-2026-06-08",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-06-08",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-1-2026-06-09",
+      "classId": "class-1a",
+      "studentId": "std-1a-1",
+      "date": "2026-06-09",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-2-2026-06-09",
+      "classId": "class-1a",
+      "studentId": "std-1a-2",
+      "date": "2026-06-09",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-3-2026-06-09",
+      "classId": "class-1a",
+      "studentId": "std-1a-3",
+      "date": "2026-06-09",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-4-2026-06-09",
+      "classId": "class-1a",
+      "studentId": "std-1a-4",
+      "date": "2026-06-09",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-5-2026-06-09",
+      "classId": "class-1a",
+      "studentId": "std-1a-5",
+      "date": "2026-06-09",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-6-2026-06-09",
+      "classId": "class-1a",
+      "studentId": "std-1a-6",
+      "date": "2026-06-09",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-7-2026-06-09",
+      "classId": "class-1a",
+      "studentId": "std-1a-7",
+      "date": "2026-06-09",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-8-2026-06-09",
+      "classId": "class-1a",
+      "studentId": "std-1a-8",
+      "date": "2026-06-09",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-9-2026-06-09",
+      "classId": "class-1a",
+      "studentId": "std-1a-9",
+      "date": "2026-06-09",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-10-2026-06-09",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-06-09",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-1-2026-06-10",
+      "classId": "class-1a",
+      "studentId": "std-1a-1",
+      "date": "2026-06-10",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-2-2026-06-10",
+      "classId": "class-1a",
+      "studentId": "std-1a-2",
+      "date": "2026-06-10",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-3-2026-06-10",
+      "classId": "class-1a",
+      "studentId": "std-1a-3",
+      "date": "2026-06-10",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-4-2026-06-10",
+      "classId": "class-1a",
+      "studentId": "std-1a-4",
+      "date": "2026-06-10",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-5-2026-06-10",
+      "classId": "class-1a",
+      "studentId": "std-1a-5",
+      "date": "2026-06-10",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-6-2026-06-10",
+      "classId": "class-1a",
+      "studentId": "std-1a-6",
+      "date": "2026-06-10",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-7-2026-06-10",
+      "classId": "class-1a",
+      "studentId": "std-1a-7",
+      "date": "2026-06-10",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-8-2026-06-10",
+      "classId": "class-1a",
+      "studentId": "std-1a-8",
+      "date": "2026-06-10",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-9-2026-06-10",
+      "classId": "class-1a",
+      "studentId": "std-1a-9",
+      "date": "2026-06-10",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-10-2026-06-10",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-06-10",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-1-2026-06-11",
+      "classId": "class-1a",
+      "studentId": "std-1a-1",
+      "date": "2026-06-11",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-2-2026-06-11",
+      "classId": "class-1a",
+      "studentId": "std-1a-2",
+      "date": "2026-06-11",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-3-2026-06-11",
+      "classId": "class-1a",
+      "studentId": "std-1a-3",
+      "date": "2026-06-11",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-4-2026-06-11",
+      "classId": "class-1a",
+      "studentId": "std-1a-4",
+      "date": "2026-06-11",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-5-2026-06-11",
+      "classId": "class-1a",
+      "studentId": "std-1a-5",
+      "date": "2026-06-11",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-6-2026-06-11",
+      "classId": "class-1a",
+      "studentId": "std-1a-6",
+      "date": "2026-06-11",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-7-2026-06-11",
+      "classId": "class-1a",
+      "studentId": "std-1a-7",
+      "date": "2026-06-11",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-8-2026-06-11",
+      "classId": "class-1a",
+      "studentId": "std-1a-8",
+      "date": "2026-06-11",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-9-2026-06-11",
+      "classId": "class-1a",
+      "studentId": "std-1a-9",
+      "date": "2026-06-11",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-10-2026-06-11",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-06-11",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-1-2026-06-12",
+      "classId": "class-1a",
+      "studentId": "std-1a-1",
+      "date": "2026-06-12",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-2-2026-06-12",
+      "classId": "class-1a",
+      "studentId": "std-1a-2",
+      "date": "2026-06-12",
+      "status": "S",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-3-2026-06-12",
+      "classId": "class-1a",
+      "studentId": "std-1a-3",
+      "date": "2026-06-12",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-4-2026-06-12",
+      "classId": "class-1a",
+      "studentId": "std-1a-4",
+      "date": "2026-06-12",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-5-2026-06-12",
+      "classId": "class-1a",
+      "studentId": "std-1a-5",
+      "date": "2026-06-12",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-6-2026-06-12",
+      "classId": "class-1a",
+      "studentId": "std-1a-6",
+      "date": "2026-06-12",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-7-2026-06-12",
+      "classId": "class-1a",
+      "studentId": "std-1a-7",
+      "date": "2026-06-12",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-8-2026-06-12",
+      "classId": "class-1a",
+      "studentId": "std-1a-8",
+      "date": "2026-06-12",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-9-2026-06-12",
+      "classId": "class-1a",
+      "studentId": "std-1a-9",
+      "date": "2026-06-12",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-10-2026-06-12",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-06-12",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-1-2026-06-13",
+      "classId": "class-1a",
+      "studentId": "std-1a-1",
+      "date": "2026-06-13",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-2-2026-06-13",
+      "classId": "class-1a",
+      "studentId": "std-1a-2",
+      "date": "2026-06-13",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-3-2026-06-13",
+      "classId": "class-1a",
+      "studentId": "std-1a-3",
+      "date": "2026-06-13",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-4-2026-06-13",
+      "classId": "class-1a",
+      "studentId": "std-1a-4",
+      "date": "2026-06-13",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-5-2026-06-13",
+      "classId": "class-1a",
+      "studentId": "std-1a-5",
+      "date": "2026-06-13",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-6-2026-06-13",
+      "classId": "class-1a",
+      "studentId": "std-1a-6",
+      "date": "2026-06-13",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-7-2026-06-13",
+      "classId": "class-1a",
+      "studentId": "std-1a-7",
+      "date": "2026-06-13",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-8-2026-06-13",
+      "classId": "class-1a",
+      "studentId": "std-1a-8",
+      "date": "2026-06-13",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-9-2026-06-13",
+      "classId": "class-1a",
+      "studentId": "std-1a-9",
+      "date": "2026-06-13",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-10-2026-06-13",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-06-13",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-1-2026-06-15",
+      "classId": "class-1a",
+      "studentId": "std-1a-1",
+      "date": "2026-06-15",
+      "status": "I",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-2-2026-06-15",
+      "classId": "class-1a",
+      "studentId": "std-1a-2",
+      "date": "2026-06-15",
+      "status": "A",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-3-2026-06-15",
+      "classId": "class-1a",
+      "studentId": "std-1a-3",
+      "date": "2026-06-15",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-4-2026-06-15",
+      "classId": "class-1a",
+      "studentId": "std-1a-4",
+      "date": "2026-06-15",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-5-2026-06-15",
+      "classId": "class-1a",
+      "studentId": "std-1a-5",
+      "date": "2026-06-15",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-6-2026-06-15",
+      "classId": "class-1a",
+      "studentId": "std-1a-6",
+      "date": "2026-06-15",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-7-2026-06-15",
+      "classId": "class-1a",
+      "studentId": "std-1a-7",
+      "date": "2026-06-15",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-8-2026-06-15",
+      "classId": "class-1a",
+      "studentId": "std-1a-8",
+      "date": "2026-06-15",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-9-2026-06-15",
+      "classId": "class-1a",
+      "studentId": "std-1a-9",
+      "date": "2026-06-15",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-10-2026-06-15",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-06-15",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-1-2026-06-16",
+      "classId": "class-1a",
+      "studentId": "std-1a-1",
+      "date": "2026-06-16",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-2-2026-06-16",
+      "classId": "class-1a",
+      "studentId": "std-1a-2",
+      "date": "2026-06-16",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-3-2026-06-16",
+      "classId": "class-1a",
+      "studentId": "std-1a-3",
+      "date": "2026-06-16",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-4-2026-06-16",
+      "classId": "class-1a",
+      "studentId": "std-1a-4",
+      "date": "2026-06-16",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-5-2026-06-16",
+      "classId": "class-1a",
+      "studentId": "std-1a-5",
+      "date": "2026-06-16",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-6-2026-06-16",
+      "classId": "class-1a",
+      "studentId": "std-1a-6",
+      "date": "2026-06-16",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-7-2026-06-16",
+      "classId": "class-1a",
+      "studentId": "std-1a-7",
+      "date": "2026-06-16",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-8-2026-06-16",
+      "classId": "class-1a",
+      "studentId": "std-1a-8",
+      "date": "2026-06-16",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-9-2026-06-16",
+      "classId": "class-1a",
+      "studentId": "std-1a-9",
+      "date": "2026-06-16",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-10-2026-06-16",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-06-16",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-1-2026-06-18",
+      "classId": "class-1a",
+      "studentId": "std-1a-1",
+      "date": "2026-06-18",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-2-2026-06-18",
+      "classId": "class-1a",
+      "studentId": "std-1a-2",
+      "date": "2026-06-18",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-3-2026-06-18",
+      "classId": "class-1a",
+      "studentId": "std-1a-3",
+      "date": "2026-06-18",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-4-2026-06-18",
+      "classId": "class-1a",
+      "studentId": "std-1a-4",
+      "date": "2026-06-18",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-5-2026-06-18",
+      "classId": "class-1a",
+      "studentId": "std-1a-5",
+      "date": "2026-06-18",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-6-2026-06-18",
+      "classId": "class-1a",
+      "studentId": "std-1a-6",
+      "date": "2026-06-18",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-7-2026-06-18",
+      "classId": "class-1a",
+      "studentId": "std-1a-7",
+      "date": "2026-06-18",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-8-2026-06-18",
+      "classId": "class-1a",
+      "studentId": "std-1a-8",
+      "date": "2026-06-18",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-9-2026-06-18",
+      "classId": "class-1a",
+      "studentId": "std-1a-9",
+      "date": "2026-06-18",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-10-2026-06-18",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-06-18",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-1-2026-06-19",
+      "classId": "class-1a",
+      "studentId": "std-1a-1",
+      "date": "2026-06-19",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-2-2026-06-19",
+      "classId": "class-1a",
+      "studentId": "std-1a-2",
+      "date": "2026-06-19",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-3-2026-06-19",
+      "classId": "class-1a",
+      "studentId": "std-1a-3",
+      "date": "2026-06-19",
+      "status": "S",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-4-2026-06-19",
+      "classId": "class-1a",
+      "studentId": "std-1a-4",
+      "date": "2026-06-19",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-5-2026-06-19",
+      "classId": "class-1a",
+      "studentId": "std-1a-5",
+      "date": "2026-06-19",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-6-2026-06-19",
+      "classId": "class-1a",
+      "studentId": "std-1a-6",
+      "date": "2026-06-19",
+      "status": "I",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-7-2026-06-19",
+      "classId": "class-1a",
+      "studentId": "std-1a-7",
+      "date": "2026-06-19",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-8-2026-06-19",
+      "classId": "class-1a",
+      "studentId": "std-1a-8",
+      "date": "2026-06-19",
+      "status": "I",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-9-2026-06-19",
+      "classId": "class-1a",
+      "studentId": "std-1a-9",
+      "date": "2026-06-19",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-10-2026-06-19",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-06-19",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-1-2026-06-20",
+      "classId": "class-1a",
+      "studentId": "std-1a-1",
+      "date": "2026-06-20",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-2-2026-06-20",
+      "classId": "class-1a",
+      "studentId": "std-1a-2",
+      "date": "2026-06-20",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-3-2026-06-20",
+      "classId": "class-1a",
+      "studentId": "std-1a-3",
+      "date": "2026-06-20",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-4-2026-06-20",
+      "classId": "class-1a",
+      "studentId": "std-1a-4",
+      "date": "2026-06-20",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-5-2026-06-20",
+      "classId": "class-1a",
+      "studentId": "std-1a-5",
+      "date": "2026-06-20",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-6-2026-06-20",
+      "classId": "class-1a",
+      "studentId": "std-1a-6",
+      "date": "2026-06-20",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-7-2026-06-20",
+      "classId": "class-1a",
+      "studentId": "std-1a-7",
+      "date": "2026-06-20",
+      "status": "A",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-8-2026-06-20",
+      "classId": "class-1a",
+      "studentId": "std-1a-8",
+      "date": "2026-06-20",
+      "status": "S",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-9-2026-06-20",
+      "classId": "class-1a",
+      "studentId": "std-1a-9",
+      "date": "2026-06-20",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1a-std-1a-10-2026-06-20",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-06-20",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1b-std-1b-1-2026-06-15",
+      "classId": "class-1b",
+      "studentId": "std-1b-1",
+      "date": "2026-06-15",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1b-std-1b-2-2026-06-15",
+      "classId": "class-1b",
+      "studentId": "std-1b-2",
+      "date": "2026-06-15",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1b-std-1b-3-2026-06-15",
+      "classId": "class-1b",
+      "studentId": "std-1b-3",
+      "date": "2026-06-15",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1b-std-1b-4-2026-06-15",
+      "classId": "class-1b",
+      "studentId": "std-1b-4",
+      "date": "2026-06-15",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1b-std-1b-5-2026-06-15",
+      "classId": "class-1b",
+      "studentId": "std-1b-5",
+      "date": "2026-06-15",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1b-std-1b-1-2026-06-16",
+      "classId": "class-1b",
+      "studentId": "std-1b-1",
+      "date": "2026-06-16",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1b-std-1b-2-2026-06-16",
+      "classId": "class-1b",
+      "studentId": "std-1b-2",
+      "date": "2026-06-16",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1b-std-1b-3-2026-06-16",
+      "classId": "class-1b",
+      "studentId": "std-1b-3",
+      "date": "2026-06-16",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1b-std-1b-4-2026-06-16",
+      "classId": "class-1b",
+      "studentId": "std-1b-4",
+      "date": "2026-06-16",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1b-std-1b-5-2026-06-16",
+      "classId": "class-1b",
+      "studentId": "std-1b-5",
+      "date": "2026-06-16",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1b-std-1b-1-2026-06-18",
+      "classId": "class-1b",
+      "studentId": "std-1b-1",
+      "date": "2026-06-18",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1b-std-1b-2-2026-06-18",
+      "classId": "class-1b",
+      "studentId": "std-1b-2",
+      "date": "2026-06-18",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1b-std-1b-3-2026-06-18",
+      "classId": "class-1b",
+      "studentId": "std-1b-3",
+      "date": "2026-06-18",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1b-std-1b-4-2026-06-18",
+      "classId": "class-1b",
+      "studentId": "std-1b-4",
+      "date": "2026-06-18",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1b-std-1b-5-2026-06-18",
+      "classId": "class-1b",
+      "studentId": "std-1b-5",
+      "date": "2026-06-18",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1b-std-1b-1-2026-06-19",
+      "classId": "class-1b",
+      "studentId": "std-1b-1",
+      "date": "2026-06-19",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1b-std-1b-2-2026-06-19",
+      "classId": "class-1b",
+      "studentId": "std-1b-2",
+      "date": "2026-06-19",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1b-std-1b-3-2026-06-19",
+      "classId": "class-1b",
+      "studentId": "std-1b-3",
+      "date": "2026-06-19",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1b-std-1b-4-2026-06-19",
+      "classId": "class-1b",
+      "studentId": "std-1b-4",
+      "date": "2026-06-19",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1b-std-1b-5-2026-06-19",
+      "classId": "class-1b",
+      "studentId": "std-1b-5",
+      "date": "2026-06-19",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1b-std-1b-1-2026-06-20",
+      "classId": "class-1b",
+      "studentId": "std-1b-1",
+      "date": "2026-06-20",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1b-std-1b-2-2026-06-20",
+      "classId": "class-1b",
+      "studentId": "std-1b-2",
+      "date": "2026-06-20",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1b-std-1b-3-2026-06-20",
+      "classId": "class-1b",
+      "studentId": "std-1b-3",
+      "date": "2026-06-20",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1b-std-1b-4-2026-06-20",
+      "classId": "class-1b",
+      "studentId": "std-1b-4",
+      "date": "2026-06-20",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    },
+    {
+      "id": "class-1b-std-1b-5-2026-06-20",
+      "classId": "class-1b",
+      "studentId": "std-1b-5",
+      "date": "2026-06-20",
+      "status": "H",
+      "updatedAt": "2026-10-05T04:51:15.863Z"
+    }
+  ],
+  "updatedAt": "2026-10-05T04:51:15.863Z"
+}
