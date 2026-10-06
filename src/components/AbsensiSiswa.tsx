@@ -11,14 +11,16 @@ import {
   Clock,
   Sparkles,
   Info,
-  CalendarDays
+  CalendarDays,
+  ArrowRight,
 } from 'lucide-react';
 
 interface AbsensiSiswaProps {
   session: UserSession;
+  onNavigateToRekap?: (classId: string, month: number, year: number) => void;
 }
 
-export default function AbsensiSiswa({ session }: AbsensiSiswaProps) {
+export default function AbsensiSiswa({ session, onNavigateToRekap }: AbsensiSiswaProps) {
   const isAdmin = session.role === 'admin';
   const classes = db.getClasses();
   const holidays = db.getHolidays();
@@ -444,9 +446,31 @@ export default function AbsensiSiswa({ session }: AbsensiSiswaProps) {
           <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               {saveSuccess && (
-                <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 font-bold text-xs rounded-xl flex items-center gap-2 animate-bounce">
-                  <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
-                  Presensi {selectedClass?.name} ({getDayNameID(selectedDate)}, {getFormattedDate(selectedDate)}) berhasil disimpan ke database!
+                <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-xl flex flex-col sm:flex-row sm:items-center gap-2.5 animate-fade-in shadow-xs">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 size={18} className="text-emerald-600 shrink-0" />
+                    <div>
+                      <p className="font-bold text-emerald-950">
+                        Presensi {selectedClass?.name} ({getDayNameID(selectedDate)}, {getFormattedDate(selectedDate)}) Berhasil Disimpan!
+                      </p>
+                      <p className="text-[11px] text-emerald-700">
+                        Data otomatis tercatat ke database sekolah dan langsung masuk ke Rekapitulasi Bulanan & Semester.
+                      </p>
+                    </div>
+                  </div>
+                  {onNavigateToRekap && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const d = new Date(selectedDate);
+                        onNavigateToRekap(selectedClassId, d.getMonth(), d.getFullYear());
+                      }}
+                      className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 shrink-0 cursor-pointer shadow-xs ml-auto"
+                    >
+                      <span>Lihat di Rekap Bulanan</span>
+                      <ArrowRight size={13} />
+                    </button>
+                  )}
                 </div>
               )}
               {saveError && (

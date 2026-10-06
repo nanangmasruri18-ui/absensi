@@ -15,9 +15,12 @@ import {
 
 interface RekapBulananProps {
   session: UserSession;
+  initialClassId?: string;
+  initialMonth?: number;
+  initialYear?: number;
 }
 
-export default function RekapBulanan({ session }: RekapBulananProps) {
+export default function RekapBulanan({ session, initialClassId, initialMonth, initialYear }: RekapBulananProps) {
   const isAdmin = session.role === 'admin';
   const classes = db.getClasses();
   const holidays = db.getHolidays();
@@ -27,26 +30,65 @@ export default function RekapBulanan({ session }: RekapBulananProps) {
     ? session.assignedClassId
     : (classes.length > 0 ? classes[0].id : '');
 
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+
   // Filter states
-  const [selectedClassId, setSelectedClassId] = useState(defaultClassId);
-  const [selectedMonth, setSelectedMonth] = useState(5); // June is index 5
-  const [selectedYear, setSelectedYear] = useState(2026);
+  const [selectedClassId, setSelectedClassId] = useState(initialClassId || defaultClassId);
+  const [selectedMonth, setSelectedMonth] = useState(
+    typeof initialMonth === 'number' ? initialMonth : currentMonth
+  );
+  const [selectedYear, setSelectedYear] = useState(
+    typeof initialYear === 'number' ? initialYear : currentYear
+  );
   
   // Data lists
   const [students, setStudents] = useState<Student[]>([]);
   const [attendanceData, setAttendanceData] = useState<Record<string, Record<string, string>>>({});
   const [daysInMonth, setDaysInMonth] = useState(30);
+  const [totalMonthRecords, setTotalMonthRecords] = useState(0);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const months = [
     'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
     'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
   ];
 
-  const years = [2025, 2026, 2027];
+  const years = Array.from(new Set([
+    2024,
+    2025,
+    2026,
+    2027,
+    currentYear - 1,
+    currentYear,
+    currentYear + 1,
+  ])).sort((a, b) => a - b);
+
+  // Sync when props change
+  useEffect(() => {
+    if (initialClassId) setSelectedClassId(initialClassId);
+    if (typeof initialMonth === 'number') setSelectedMonth(initialMonth);
+    if (typeof initialYear === 'number') setSelectedYear(initialYear);
+  }, [initialClassId, initialMonth, initialYear]);
+
+  // Real-time event listener to update whenever attendance is saved
+  useEffect(() => {
+    const handleUpdate = () => {
+      setRefreshTrigger((prev) => prev + 1);
+    };
+    window.addEventListener('absensi-updated', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+    return () => {
+      window.removeEventListener('absensi-updated', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
+  }, []);
 
   useEffect(() => {
     if (!selectedClassId) {
       setStudents([]);
+      setTotalMonthRecords(0);
       return;
     }
 
@@ -61,13 +103,16 @@ export default function RekapBulanan({ session }: RekapBulananProps) {
     setStudents(list);
 
     // Fetch all attendances for chosen month
-    const attendanceRecords = db.getAttendance().filter((a) => {
+    const allAttendance = db.getAttendance();
+    const attendanceRecords = allAttendance.filter((a) => {
       if (a.classId !== selectedClassId) return false;
       const dateParts = a.date.split('-');
-      const recordYear = parseInt(dateParts[0]);
-      const recordMonth = parseInt(dateParts[1]); // 1-indexed
+      const recordYear = parseInt(dateParts[0], 10);
+      const recordMonth = parseInt(dateParts[1], 10); // 1-indexed
       return recordYear === selectedYear && recordMonth === (selectedMonth + 1);
     });
+
+    setTotalMonthRecords(attendanceRecords.length);
 
     // Remap to indexed grid: studentId -> {dateStr: status}
     const remapGrid: Record<string, Record<string, string>> = {};
@@ -84,7 +129,7 @@ export default function RekapBulanan({ session }: RekapBulananProps) {
 
     setAttendanceData(remapGrid);
 
-  }, [selectedClassId, selectedMonth, selectedYear]);
+  }, [selectedClassId, selectedMonth, selectedYear, refreshTrigger]);
 
   // Helpers to get cell content/colors in screen table
   const getCellMeta = (dayNum: number) => {
@@ -197,15 +242,27 @@ export default function RekapBulanan({ session }: RekapBulananProps) {
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-1">Pilih Bulan Rekap:</label>
+          <div className="flex items-center justify-between mb-1">
+            <label className="block text-xs font-semibold text-slate-700">Pilih Bulan Rekap:</label>
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedMonth(currentMonth);
+                setSelectedYear(currentYear);
+              }}
+              className="text-[10px] text-blue-600 hover:text-blue-800 font-bold underline cursor-pointer"
+            >
+              Bulan Ini
+            </button>
+          </div>
           <select
             value={selectedMonth}
-            onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+            onChange={(e) => setSelectedMonth(parseInt(e.target.value, 10))}
             className="block w-full px-3 py-2 border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 bg-white"
           >
             {months.map((m, index) => (
               <option key={index} value={index}>
-                {m}
+                {m} {index === currentMonth && selectedYear === currentYear ? '★ (Bulan Berjalan)' : ''}
               </option>
             ))}
           </select>
@@ -215,7 +272,7 @@ export default function RekapBulanan({ session }: RekapBulananProps) {
           <label className="block text-xs font-semibold text-slate-700 mb-1">Pilih Tahun:</label>
           <select
             value={selectedYear}
-            onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+            onChange={(e) => setSelectedYear(parseInt(e.target.value, 10))}
             className="block w-full px-3 py-2 border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 bg-white"
           >
             {years.map((y) => (
@@ -226,6 +283,40 @@ export default function RekapBulanan({ session }: RekapBulananProps) {
           </select>
         </div>
       </div>
+
+      {/* Month data indicator banner */}
+      {selectedClassId && students.length > 0 && (
+        <div className="mb-4">
+          {totalMonthRecords > 0 ? (
+            <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 flex items-center justify-between text-xs">
+              <span className="font-semibold flex items-center gap-1.5">
+                <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                Periode Rekap: <strong>{months[selectedMonth]} {selectedYear}</strong> — Terdata {totalMonthRecords} catatan presensi tersimpan untuk rombel ini.
+              </span>
+              <span className="text-[11px] text-emerald-700 bg-emerald-100/70 px-2.5 py-0.5 rounded-full font-bold">
+                Tersinkronisasi
+              </span>
+            </div>
+          ) : (
+            <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 flex items-center justify-between text-xs">
+              <span className="font-semibold flex items-center gap-1.5">
+                <AlertCircle size={14} className="text-amber-600 shrink-0" />
+                Periode Rekap: <strong>{months[selectedMonth]} {selectedYear}</strong> — Belum ada catatan absensi tersimpan untuk rombel ini pada bulan ini.
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedMonth(currentMonth);
+                  setSelectedYear(currentYear);
+                }}
+                className="text-[11px] text-amber-900 bg-amber-200/80 hover:bg-amber-200 px-2.5 py-1 rounded-lg font-bold transition cursor-pointer shrink-0"
+              >
+                Cek Bulan Berjalan ({months[currentMonth]})
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Screen Preview Tables */}
       {selectedClassId && students.length > 0 ? (

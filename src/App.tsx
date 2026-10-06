@@ -24,6 +24,7 @@ export default function App() {
   const [session, setSession] = useState<UserSession | null>(null);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [rekapParams, setRekapParams] = useState<{ classId?: string; month?: number; year?: number }>({});
   
   // Real-time clock state
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -143,9 +144,24 @@ export default function App() {
       case 'libur':
         return session.role === 'admin' ? <HariLibur /> : null;
       case 'absensi':
-        return <AbsensiSiswa session={session} />;
+        return (
+          <AbsensiSiswa 
+            session={session} 
+            onNavigateToRekap={(classId, month, year) => {
+              setRekapParams({ classId, month, year });
+              setActiveTab('rekap-bulanan');
+            }} 
+          />
+        );
       case 'rekap-bulanan':
-        return <RekapBulanan session={session} />;
+        return (
+          <RekapBulanan 
+            session={session} 
+            initialClassId={rekapParams.classId}
+            initialMonth={rekapParams.month}
+            initialYear={rekapParams.year}
+          />
+        );
       case 'rekap-semester':
         return <RekapSemester session={session} />;
       case 'pengaturan':

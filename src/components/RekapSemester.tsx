@@ -39,6 +39,20 @@ export default function RekapSemester({ session }: RekapSemesterProps) {
   const [semester, setSemester] = useState(defaultSemester); // Dynamic default based on month
   const [academicYear, setAcademicYear] = useState(defaultAcademicYear); // Dynamic default based on year
   const [searchTerm, setSearchTerm] = useState('');
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // Live listener to auto-refresh whenever attendance is saved
+  useEffect(() => {
+    const handleUpdate = () => {
+      setRefreshTrigger((prev) => prev + 1);
+    };
+    window.addEventListener('absensi-updated', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+    return () => {
+      window.removeEventListener('absensi-updated', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
+  }, []);
 
   // Loaded data
   const [students, setStudents] = useState<Student[]>([]);
@@ -126,7 +140,7 @@ export default function RekapSemester({ session }: RekapSemesterProps) {
       : 0;
     setClassAveragePercentage(avg);
 
-  }, [selectedClassId, semester, academicYear]);
+  }, [selectedClassId, semester, academicYear, refreshTrigger]);
 
   // Handle Downloads
   const handleDownloadExcel = () => {

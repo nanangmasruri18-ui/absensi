@@ -281,6 +281,20 @@ class LocalDB {
       const filtered = all.filter((a) => !(a.classId === classId && a.date === date));
       const updated = [...filtered, ...records];
       this.saveAttendance(updated);
+
+      // Also ensure backend /api/attendance endpoint receives classId and date records
+      if (typeof fetch !== 'undefined') {
+        fetch('/api/attendance', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            classId,
+            date,
+            records,
+          }),
+        }).catch((e) => console.warn('Attendance backend sync notice:', e));
+      }
+
       return true;
     } catch (err) {
       console.error('Error saving attendance for class date:', err);
