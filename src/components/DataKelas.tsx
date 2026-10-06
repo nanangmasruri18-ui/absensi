@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { db } from '../utils/db';
 import { ClassRombel, Teacher } from '../types';
 import { Plus, Edit, Trash2, GraduationCap, X, AlertCircle, Search } from 'lucide-react';
@@ -7,6 +7,19 @@ export default function DataKelas() {
   const [classes, setClasses] = useState<ClassRombel[]>(db.getClasses());
   const [teachers, setTeachers] = useState<Teacher[]>(db.getTeachers().filter((t) => t.role === 'guru'));
   const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    const handleSync = () => {
+      setClasses(db.getClasses());
+      setTeachers(db.getTeachers().filter((t) => t.role === 'guru'));
+    };
+    window.addEventListener('db-synced', handleSync);
+    window.addEventListener('storage', handleSync);
+    return () => {
+      window.removeEventListener('db-synced', handleSync);
+      window.removeEventListener('storage', handleSync);
+    };
+  }, []);
 
   // Form states
   const [isOpen, setIsOpen] = useState(false);

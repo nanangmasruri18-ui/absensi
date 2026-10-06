@@ -18,7 +18,7 @@ import PengaturanAkun from './components/PengaturanAkun';
 
 // Icons
 import { Menu, Clock, ShieldAlert, CheckCircle, RefreshCw, Database } from 'lucide-react';
-import { fetchAllFromSupabase, subscribeToSync, SyncState } from './utils/supabase';
+import { fetchAllFromSupabase, subscribeToSync, initRealtimeSync, SyncState } from './utils/supabase';
 
 export default function App() {
   const [session, setSession] = useState<UserSession | null>(null);
@@ -37,15 +37,16 @@ export default function App() {
   const inactivityTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const INACTIVITY_LIMIT_MS = 10 * 60 * 1000; // 10 minutes
 
-  // Bootstrap data from backend in background
+  // Multi-browser real-time synchronization manager
   useEffect(() => {
-    fetchAllFromSupabase();
+    const cleanupRealtime = initRealtimeSync();
 
     const unsubscribe = subscribeToSync((state) => {
       setSyncState(state);
     });
 
     return () => {
+      cleanupRealtime();
       unsubscribe();
     };
   }, []);
@@ -228,18 +229,30 @@ export default function App() {
           {/* Date Stamp & real-time clock */}
           <div className="flex items-center gap-3 text-xs font-sans">
             {/* Database Status Pill */}
-            <div className="flex items-center">
-              {syncState.status === 'syncing' ? (
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-blue-200 bg-blue-50 text-blue-700 text-[10px] font-bold animate-pulse">
-                  <RefreshCw size={12} className="animate-spin text-blue-500" />
-                  <span className="hidden sm:inline">Menyimpan data...</span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700 text-[10px] font-extrabold shadow-xs">
-                  <CheckCircle size={12} className="text-emerald-500" />
-                  <span className="hidden sm:inline">Database Tersinkronisasi</span>
-                </div>
-              )}
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => fetchAllFromSupabase(true)}
+                title="Klik untuk menyinkronkan data antar-browser sekarang"
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-extrabold transition cursor-pointer shadow-xs ${
+                  syncState.status === 'syncing'
+                    ? 'border-blue-200 bg-blue-50 text-blue-700 animate-pulse'
+                    : 'border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-700'
+                }`}
+              >
+                {syncState.status === 'syncing' ? (
+                  <>
+                    <RefreshCw size={12} className="animate-spin text-blue-500" />
+                    <span>Menyinkronkan...</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle size={12} className="text-emerald-500" />
+                    <span className="hidden sm:inline">Sinkron Real-Time</span>
+                    <RefreshCw size={10} className="text-emerald-600 ml-0.5 hover:rotate-180 transition-transform" />
+                  </>
+                )}
+              </button>
             </div>
 
             <div className="hidden md:flex items-center gap-2 text-slate-500 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100 font-semibold">

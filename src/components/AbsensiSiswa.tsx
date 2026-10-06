@@ -56,6 +56,20 @@ export default function AbsensiSiswa({ session, onNavigateToRekap }: AbsensiSisw
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saveError, setSaveError] = useState('');
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // Live listener to auto-refresh when attendance or database is synced from another browser
+  useEffect(() => {
+    const handleUpdate = () => {
+      setRefreshTrigger((k) => k + 1);
+    };
+    window.addEventListener('db-synced', handleUpdate);
+    window.addEventListener('absensi-updated', handleUpdate);
+    return () => {
+      window.removeEventListener('db-synced', handleUpdate);
+      window.removeEventListener('absensi-updated', handleUpdate);
+    };
+  }, []);
 
   // Update selected class if preferred changes and current is invalid
   useEffect(() => {
@@ -116,7 +130,7 @@ export default function AbsensiSiswa({ session, onNavigateToRekap }: AbsensiSisw
     setAttendanceGrid(initialGrid);
     setSaveSuccess(false);
     setSaveError('');
-  }, [selectedDate, selectedClassId]);
+  }, [selectedDate, selectedClassId, refreshTrigger]);
 
   // Bulk set all students to H
   const setAllHadir = () => {

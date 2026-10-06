@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { db, encryptPassword, decryptPassword } from '../utils/db';
 import { Teacher, ClassRombel, Gender } from '../types';
 import { Plus, Edit, Trash2, UsersRound, X, AlertCircle, Eye, EyeOff, Search } from 'lucide-react';
@@ -7,6 +7,19 @@ export default function DataGuru() {
   const [teachers, setTeachers] = useState<Teacher[]>(db.getTeachers());
   const [classes, setClasses] = useState<ClassRombel[]>(db.getClasses());
   const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    const handleSync = () => {
+      setTeachers(db.getTeachers());
+      setClasses(db.getClasses());
+    };
+    window.addEventListener('db-synced', handleSync);
+    window.addEventListener('storage', handleSync);
+    return () => {
+      window.removeEventListener('db-synced', handleSync);
+      window.removeEventListener('storage', handleSync);
+    };
+  }, []);
 
   // Form states
   const [isOpen, setIsOpen] = useState(false);

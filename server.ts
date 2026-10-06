@@ -197,10 +197,31 @@ try {
   console.error('Error initializing database file:', e);
 }
 
+// Real-time SSE subscribers
+const sseClients = new Set<express.Response>();
+
+function broadcastChange(type: string, detail?: any) {
+  const payload = JSON.stringify({
+    type,
+    updatedAt: databaseCache.updatedAt,
+    attendanceCount: databaseCache.attendance ? databaseCache.attendance.length : 0,
+    detail,
+  });
+
+  for (const client of sseClients) {
+    try {
+      client.write(`data: ${payload}\n\n`);
+    } catch {
+      sseClients.delete(client);
+    }
+  }
+}
+
 function persistDb() {
   try {
     databaseCache.updatedAt = new Date().toISOString();
     fs.writeFileSync(DB_FILE, JSON.stringify(databaseCache, null, 2), 'utf-8');
+    broadcastChange('db_updated');
   } catch (err) {
     console.error('Failed to write database file:', err);
   }
@@ -209,6 +230,32 @@ function persistDb() {
 // REST API Endpoints
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', time: new Date().toISOString() });
+});
+
+// SSE endpoint for immediate multi-browser sync
+app.get('/api/sync/events', (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache, no-transform');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no');
+  res.flushHeaders();
+
+  sseClients.add(res);
+
+  // Send initial connection payload
+  res.write(`data: ${JSON.stringify({ type: 'connected', updatedAt: databaseCache.updatedAt, attendanceCount: databaseCache.attendance?.length || 0 })}\n\n`);
+
+  req.on('close', () => {
+    sseClients.delete(res);
+  });
+});
+
+// Lightweight version check for polling heartbeat
+app.get('/api/db/version', (req, res) => {
+  res.json({
+    updatedAt: databaseCache.updatedAt,
+    attendanceCount: databaseCache.attendance ? databaseCache.attendance.length : 0,
+  });
 });
 
 // Full database GET

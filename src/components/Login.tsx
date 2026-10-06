@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { db, encryptPassword } from '../utils/db';
 import { UserSession } from '../types';
 import { fetchAllFromSupabase } from '../utils/supabase';
@@ -30,6 +30,10 @@ export default function Login({ onLoginSuccess }: LoginProps) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [refreshMessage, setRefreshMessage] = useState('');
   const [refreshError, setRefreshError] = useState(false);
+
+  useEffect(() => {
+    fetchAllFromSupabase();
+  }, []);
 
   const handleSupabaseRefresh = async () => {
     setIsRefreshing(true);

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { db } from '../utils/db';
 import { SchoolProfile, ClassRombel, Teacher, Student } from '../types';
 import { fetchAllFromSupabase } from '../utils/supabase';
@@ -21,21 +21,39 @@ import {
 
 export default function AdminDashboard() {
   const [school, setSchool] = useState<SchoolProfile>(db.getSchool());
-  const [classes] = useState<ClassRombel[]>(db.getClasses());
-  const [teachers] = useState<Teacher[]>(db.getTeachers());
-  const [students] = useState<Student[]>(db.getStudents());
-  const [attendance] = useState(db.getAttendance());
+  const [classes, setClasses] = useState<ClassRombel[]>(db.getClasses());
+  const [teachers, setTeachers] = useState<Teacher[]>(db.getTeachers());
+  const [students, setStudents] = useState<Student[]>(db.getStudents());
+  const [attendance, setAttendance] = useState(db.getAttendance());
 
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [refreshMessage, setRefreshMessage] = useState('');
   const [refreshError, setRefreshError] = useState(false);
+
+  const reloadData = () => {
+    setSchool(db.getSchool());
+    setClasses(db.getClasses());
+    setTeachers(db.getTeachers());
+    setStudents(db.getStudents());
+    setAttendance(db.getAttendance());
+  };
+
+  useEffect(() => {
+    window.addEventListener('db-synced', reloadData);
+    window.addEventListener('absensi-updated', reloadData);
+    return () => {
+      window.removeEventListener('db-synced', reloadData);
+      window.removeEventListener('absensi-updated', reloadData);
+    };
+  }, []);
 
   const handleSupabaseRefresh = async () => {
     setIsRefreshing(true);
     setRefreshError(false);
     setRefreshMessage('Harap tunggu, sedang menyinkronkan data dengan database sekolah...');
     try {
-      const success = await fetchAllFromSupabase();
+      const success = await fetchAllFromSupabase(true);
+      reloadData();
       if (success) {
         setRefreshMessage('Penyelarasan berhasil! Sistem memuat data terbaru.');
         setTimeout(() => setRefreshMessage(''), 3500);

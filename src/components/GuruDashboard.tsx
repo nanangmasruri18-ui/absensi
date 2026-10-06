@@ -23,6 +23,18 @@ interface GuruDashboardProps {
 }
 
 export default function GuruDashboard({ session, setActiveTab }: GuruDashboardProps) {
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  useEffect(() => {
+    const handleUpdate = () => setRefreshTrigger((k) => k + 1);
+    window.addEventListener('db-synced', handleUpdate);
+    window.addEventListener('absensi-updated', handleUpdate);
+    return () => {
+      window.removeEventListener('db-synced', handleUpdate);
+      window.removeEventListener('absensi-updated', handleUpdate);
+    };
+  }, []);
+
   // Retrieve teacher profile
   const teachers = db.getTeachers();
   const currentTeacher = teachers.find((t) => t.id === session.userId);
@@ -44,7 +56,8 @@ export default function GuruDashboard({ session, setActiveTab }: GuruDashboardPr
     setRefreshError(false);
     setRefreshMessage('Harap tunggu, sedang menyinkronkan data dengan server database...');
     try {
-      const success = await fetchAllFromSupabase();
+      const success = await fetchAllFromSupabase(true);
+      setRefreshTrigger((k) => k + 1);
       if (success) {
         setRefreshMessage('Penyelarasan berhasil! Sistem memuat data terbaru.');
         setTimeout(() => setRefreshMessage(''), 3500);

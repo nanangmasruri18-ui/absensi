@@ -47,9 +47,11 @@ export default function RekapSemester({ session }: RekapSemesterProps) {
       setRefreshTrigger((prev) => prev + 1);
     };
     window.addEventListener('absensi-updated', handleUpdate);
+    window.addEventListener('db-synced', handleUpdate);
     window.addEventListener('storage', handleUpdate);
     return () => {
       window.removeEventListener('absensi-updated', handleUpdate);
+      window.removeEventListener('db-synced', handleUpdate);
       window.removeEventListener('storage', handleUpdate);
     };
   }, []);

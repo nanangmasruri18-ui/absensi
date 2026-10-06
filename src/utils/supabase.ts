@@ -1,6 +1,6 @@
 // Synchronization service for SD Absensi
-// Synchronizes data across users and devices via the application backend API (/api/db)
-// with localStorage as immediate offline cache.
+// Real-time synchronization across multiple browsers and devices via Server-Sent Events (SSE),
+// lightweight version heartbeats, window-focus listeners, and localStorage offline cache.
 
 export type SyncStatus = 'synced' | 'syncing' | 'error' | 'not_configured';
 
@@ -17,6 +17,9 @@ let currentSyncState: SyncState = {
   lastSyncedAt: new Date().toISOString(),
   backendType: 'server',
 };
+
+let lastKnownServerTime = '';
+let isSyncInProgress = false;
 
 export function getSyncState(): SyncState {
   return currentSyncState;
@@ -36,7 +39,7 @@ function updateSyncState(newState: Partial<SyncState>) {
 }
 
 // Key mapping for local storage and server database
-const KEYS = {
+export const KEYS = {
   SCHOOL: 'absensi_sd_school',
   CLASSES: 'absensi_sd_classes',
   TEACHERS: 'absensi_sd_teachers',
@@ -45,14 +48,17 @@ const KEYS = {
   ATTENDANCE: 'absensi_sd_attendance',
 };
 
-// Fetch data from backend API and sync to LocalStorage
-export async function fetchAllFromSupabase(): Promise<boolean> {
+// Fetch data from backend API and sync to LocalStorage with instant UI notification
+export async function fetchAllFromSupabase(force = false): Promise<boolean> {
+  if (isSyncInProgress && !force) return true;
+  isSyncInProgress = true;
+
   try {
     updateSyncState({ status: 'syncing' });
 
-    // Fetch from application backend API
     const response = await fetch('/api/db', {
       headers: { 'Content-Type': 'application/json' },
+      cache: 'no-store',
     });
 
     if (response.ok) {
@@ -64,7 +70,26 @@ export async function fetchAllFromSupabase(): Promise<boolean> {
         if (data.students) localStorage.setItem(KEYS.STUDENTS, JSON.stringify(data.students));
         if (data.holidays) localStorage.setItem(KEYS.HOLIDAYS, JSON.stringify(data.holidays));
         if (data.attendance) localStorage.setItem(KEYS.ATTENDANCE, JSON.stringify(data.attendance));
+
+        if (data.updatedAt) {
+          lastKnownServerTime = data.updatedAt;
+        }
+
+        // Broadcast events to all components in current window
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('absensi-updated', {
+              detail: { count: data.attendance?.length || 0, source: 'remote-sync' },
+            })
+          );
+          window.dispatchEvent(
+            new CustomEvent('db-synced', {
+              detail: data,
+            })
+          );
+        }
       }
+
       updateSyncState({
         status: 'synced',
         lastSyncedAt: new Date().toISOString(),
@@ -73,7 +98,6 @@ export async function fetchAllFromSupabase(): Promise<boolean> {
       });
       return true;
     } else {
-      // If server returned non-ok, we still have localStorage
       updateSyncState({
         status: 'synced',
         lastSyncedAt: new Date().toISOString(),
@@ -82,23 +106,23 @@ export async function fetchAllFromSupabase(): Promise<boolean> {
       return true;
     }
   } catch (err: any) {
-    // If offline / local dev, localStorage is already functioning
     console.warn('Backend sync warning, using local persistent storage:', err);
     updateSyncState({
       status: 'synced',
       lastSyncedAt: new Date().toISOString(),
       backendType: 'local',
     });
-    return true; // Always return true so application is never blocked!
+    return true;
+  } finally {
+    isSyncInProgress = false;
   }
 }
 
-// Push local item update to backend API
+// Push local item update to backend API and broadcast change
 export async function pushToSupabase(key: string, value: any): Promise<boolean> {
   try {
     updateSyncState({ status: 'syncing' });
 
-    // Translate storage key to payload property
     let payload: Record<string, any> = {};
     if (key === KEYS.SCHOOL) payload.school = value;
     else if (key === KEYS.CLASSES) payload.classes = value;
@@ -107,7 +131,6 @@ export async function pushToSupabase(key: string, value: any): Promise<boolean> 
     else if (key === KEYS.HOLIDAYS) payload.holidays = value;
     else if (key === KEYS.ATTENDANCE) {
       payload.attendance = value;
-      // Also send dedicated attendance update
       fetch('/api/attendance', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -116,11 +139,17 @@ export async function pushToSupabase(key: string, value: any): Promise<boolean> 
     }
 
     if (Object.keys(payload).length > 0) {
-      await fetch('/api/db', {
+      const res = await fetch('/api/db', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
+      if (res.ok) {
+        const resData = await res.json();
+        if (resData.updatedAt) {
+          lastKnownServerTime = resData.updatedAt;
+        }
+      }
     }
 
     updateSyncState({
@@ -132,9 +161,95 @@ export async function pushToSupabase(key: string, value: any): Promise<boolean> 
   } catch (err: any) {
     console.warn(`Could not sync key "${key}" to server, cached locally:`, err);
     updateSyncState({
-      status: 'synced', // Keep as synced because localStorage has it safely
+      status: 'synced',
       lastSyncedAt: new Date().toISOString(),
     });
     return true;
   }
+}
+
+// Multi-browser real-time synchronization manager
+let realtimeInitialized = false;
+
+export function initRealtimeSync(): () => void {
+  if (typeof window === 'undefined' || realtimeInitialized) {
+    return () => {};
+  }
+  realtimeInitialized = true;
+
+  // 1. Initial immediate sync
+  fetchAllFromSupabase();
+
+  // 2. Server-Sent Events (SSE) listener for instant sub-second sync across browsers
+  let eventSource: EventSource | null = null;
+  try {
+    eventSource = new EventSource('/api/sync/events');
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'db_updated') {
+          // A change occurred on another browser or device!
+          fetchAllFromSupabase(true);
+        } else if (data.type === 'connected') {
+          if (data.updatedAt) {
+            lastKnownServerTime = data.updatedAt;
+          }
+        }
+      } catch (e) {
+        // Silent catch
+      }
+    };
+    eventSource.onerror = () => {
+      // EventSource automatically reconnects on error
+    };
+  } catch (e) {
+    console.warn('SSE not supported or connection error, using polling fallback');
+  }
+
+  // 3. Heartbeat polling fallback (checks version every 3 seconds)
+  const pollInterval = setInterval(async () => {
+    try {
+      const res = await fetch('/api/db/version', { cache: 'no-store' });
+      if (res.ok) {
+        const info = await res.json();
+        if (info.updatedAt && info.updatedAt !== lastKnownServerTime) {
+          lastKnownServerTime = info.updatedAt;
+          fetchAllFromSupabase(true);
+        }
+      }
+    } catch {}
+  }, 3000);
+
+  // 4. Instant sync on window focus or tab visibility change (when user switches to this browser)
+  const handleFocusOrVisible = () => {
+    fetchAllFromSupabase(true);
+  };
+
+  window.addEventListener('focus', handleFocusOrVisible);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      handleFocusOrVisible();
+    }
+  });
+
+  // 5. Cross-tab storage listener for the same browser
+  const handleStorageChange = (e: StorageEvent) => {
+    if (e.key && Object.values(KEYS).includes(e.key)) {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('absensi-updated', { detail: { source: 'tab-storage' } }));
+        window.dispatchEvent(new CustomEvent('db-synced'));
+      }
+    }
+  };
+  window.addEventListener('storage', handleStorageChange);
+
+  return () => {
+    if (eventSource) {
+      eventSource.close();
+    }
+    clearInterval(pollInterval);
+    window.removeEventListener('focus', handleFocusOrVisible);
+    window.removeEventListener('storage', handleStorageChange);
+    realtimeInitialized = false;
+  };
 }

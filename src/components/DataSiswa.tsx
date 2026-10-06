@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { db } from '../utils/db';
 import { Student, ClassRombel, Gender } from '../types';
 import { downloadStudentTemplate, parseAndValidateStudentExcel } from '../utils/excel';
@@ -19,8 +19,21 @@ import {
 
 export default function DataSiswa() {
   const [students, setStudents] = useState<Student[]>(db.getStudents());
-  const [classes] = useState<ClassRombel[]>(db.getClasses());
+  const [classes, setClasses] = useState<ClassRombel[]>(db.getClasses());
   
+  useEffect(() => {
+    const handleSync = () => {
+      setStudents(db.getStudents());
+      setClasses(db.getClasses());
+    };
+    window.addEventListener('db-synced', handleSync);
+    window.addEventListener('storage', handleSync);
+    return () => {
+      window.removeEventListener('db-synced', handleSync);
+      window.removeEventListener('storage', handleSync);
+    };
+  }, []);
+
   // States
   const [searchTerm, setSearchTerm] = useState('');
   const [classFilter, setClassFilter] = useState('');
