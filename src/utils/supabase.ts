@@ -281,6 +281,23 @@ export async function fetchAllFromSupabase(force = false): Promise<boolean> {
             localStorage.setItem(KEYS.HOLIDAYS, JSON.stringify(holidaysObj));
           }
 
+          // Also sync retrieved Supabase models to local backend /api/db
+          try {
+            const serverDbPayload: Record<string, any> = {};
+            if (schoolRes.data && schoolRes.data.length > 0) serverDbPayload.school = JSON.parse(localStorage.getItem(KEYS.SCHOOL) || '{}');
+            if (classesRes.data && classesRes.data.length > 0) serverDbPayload.classes = JSON.parse(localStorage.getItem(KEYS.CLASSES) || '[]');
+            if (teachersRes.data && teachersRes.data.length > 0) serverDbPayload.teachers = JSON.parse(localStorage.getItem(KEYS.TEACHERS) || '[]');
+            if (studentsRes.data && studentsRes.data.length > 0) serverDbPayload.students = JSON.parse(localStorage.getItem(KEYS.STUDENTS) || '[]');
+            if (holidaysRes.data && holidaysRes.data.length > 0) serverDbPayload.holidays = JSON.parse(localStorage.getItem(KEYS.HOLIDAYS) || '[]');
+            if (Object.keys(serverDbPayload).length > 0) {
+              fetch('/api/db', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(serverDbPayload),
+              }).catch(() => {});
+            }
+          } catch {}
+
           // Format attendance
           if (attendanceRes.data && attendanceRes.data.length > 0) {
             const remoteAttendance: Attendance[] = attendanceRes.data.map((r: any) => ({

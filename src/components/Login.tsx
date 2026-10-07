@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { db, encryptPassword } from '../utils/db';
-import { UserSession } from '../types';
-import { fetchAllFromSupabase } from '../utils/supabase';
+import { db, encryptPassword, decryptPassword } from '../utils/db';
+import { UserSession, SchoolProfile, Teacher } from '../types';
+import { fetchAllFromSupabase, supabase, KEYS } from '../utils/supabase';
 import { 
   School, 
   User, 
@@ -27,26 +27,44 @@ export default function Login({ onLoginSuccess }: LoginProps) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const [school, setSchool] = useState<SchoolProfile>(db.getSchool());
+  const [teachers, setTeachers] = useState<Teacher[]>(db.getTeachers());
+
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [refreshMessage, setRefreshMessage] = useState('');
   const [refreshError, setRefreshError] = useState(false);
 
+  // Sync state on load and on Supabase event
   useEffect(() => {
-    fetchAllFromSupabase();
+    const reload = () => {
+      setSchool(db.getSchool());
+      setTeachers(db.getTeachers());
+    };
+
+    fetchAllFromSupabase().then(() => reload());
+
+    window.addEventListener('db-synced', reload);
+    window.addEventListener('storage', reload);
+    return () => {
+      window.removeEventListener('db-synced', reload);
+      window.removeEventListener('storage', reload);
+    };
   }, []);
 
   const handleSupabaseRefresh = async () => {
     setIsRefreshing(true);
     setRefreshError(false);
-    setRefreshMessage('Menghubungkan dan menyinkronkan dengan database...');
+    setRefreshMessage('Menghubungkan dan menarik data terbaru dari Supabase...');
     try {
-      const success = await fetchAllFromSupabase();
+      const success = await fetchAllFromSupabase(true);
+      setSchool(db.getSchool());
+      setTeachers(db.getTeachers());
       if (success) {
-        setRefreshMessage('Sinkronisasi Berhasil! Database terhubung dan mutakhir.');
+        setRefreshMessage('✓ Data berhasil diambil dari Supabase Cloud!');
         setTimeout(() => setRefreshMessage(''), 3500);
       } else {
         setRefreshError(true);
-        setRefreshMessage('Sinkronisasi selesai dengan penyimpanan lokal.');
+        setRefreshMessage('Menggunakan data cache lokal.');
         setTimeout(() => setRefreshMessage(''), 3500);
       }
     } catch (err) {
@@ -58,43 +76,80 @@ export default function Login({ onLoginSuccess }: LoginProps) {
     }
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
     try {
-      // Small artificial delay for premium login feel
-      setTimeout(() => {
-        const teachers = db.getTeachers();
-        const encrypted = encryptPassword(password);
-        
-        // Find matching credentials
-        const matched = teachers.find(
-          (t) => t.username === username.trim() && t.passwordHash === encrypted
-        );
+      let currentTeachers = db.getTeachers();
+      const trimmedUser = username.trim().toLowerCase();
+      const encrypted = encryptPassword(password);
 
-        if (matched) {
-          // Success
-          onLoginSuccess({
-            userId: matched.id,
-            username: matched.username,
-            name: matched.name,
-            role: matched.role,
-            assignedClassId: matched.assignedClassId,
-          });
-        } else {
-          setError('Username atau password yang Anda masukkan salah.');
+      // Match helper
+      const findMatch = (list: Teacher[]) => {
+        return list.find((t) => {
+          if (t.username.trim().toLowerCase() !== trimmedUser) return false;
+          return (
+            t.passwordHash === encrypted ||
+            t.passwordHash === password ||
+            decryptPassword(t.passwordHash) === password
+          );
+        });
+      };
+
+      let matched = findMatch(currentTeachers);
+
+      // If not found in local cache, verify directly with Supabase in real-time
+      if (!matched && supabase) {
+        try {
+          const { data: remoteTeachers, error: sbErr } = await supabase.from('teachers').select('*');
+          if (!sbErr && remoteTeachers && remoteTeachers.length > 0) {
+            const mappedTeachers: Teacher[] = remoteTeachers.map((r: any) => ({
+              id: r.id,
+              nip: r.nip || '',
+              name: r.name,
+              gender: r.gender || 'L',
+              username: r.username,
+              passwordHash: r.password_hash,
+              assignedClassId: r.assigned_class_id || '',
+              role: r.role || 'guru',
+            }));
+            localStorage.setItem(KEYS.TEACHERS, JSON.stringify(mappedTeachers));
+            setTeachers(mappedTeachers);
+            matched = findMatch(mappedTeachers);
+          }
+        } catch (sbQueryErr) {
+          console.warn('Realtime Supabase login check notice:', sbQueryErr);
         }
-        setLoading(false);
-      }, 500);
+      }
+
+      if (matched) {
+        const sessionData: UserSession = {
+          userId: matched.id,
+          username: matched.username,
+          name: matched.name,
+          role: matched.role,
+          assignedClassId: matched.assignedClassId,
+        };
+        // Persist session to local storage
+        localStorage.setItem('absensi_sd_session', JSON.stringify(sessionData));
+        onLoginSuccess(sessionData);
+      } else {
+        setError('Username atau password yang Anda masukkan salah.');
+      }
     } catch {
       setError('Terjadi kesalahan sistem saat mencoba masuk.');
+    } finally {
       setLoading(false);
     }
   };
 
-  const school = db.getSchool();
+  const selectQuickAccount = (uname: string, defaultPass: string) => {
+    setUsername(uname);
+    setPassword(defaultPass);
+    setError('');
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
@@ -197,16 +252,35 @@ export default function Login({ onLoginSuccess }: LoginProps) {
           </form>
 
           <div className="mt-6 border-t border-slate-100 pt-6 space-y-4">
-            <div className="rounded-lg bg-slate-50 p-3 border border-slate-100 flex items-start gap-2.5 text-xs text-slate-600">
-              <ShieldCheck className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-              <div>
-                <p className="font-semibold text-slate-700">Masuk Akun Bawaan Sekolah:</p>
-                <div className="mt-1 space-y-0.5">
-                  <p>🔑 <strong className="text-slate-800">Admin:</strong> admin / admin123</p>
-                  <p>🔑 <strong className="text-slate-800">Guru 1A:</strong> guru1a / password1a</p>
-                  <p>🔑 <strong className="text-slate-800">Guru 1B:</strong> guru1b / password1b</p>
-                  <p>🔑 <strong className="text-slate-800">Guru 2A:</strong> guru2a / password2a</p>
-                </div>
+            <div className="rounded-lg bg-slate-50 p-3.5 border border-slate-100 flex flex-col gap-2 text-xs text-slate-600">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
+                <p className="font-bold text-slate-700">Pilih Akun Guru & Admin (Klik untuk Masuk Cepat):</p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 mt-1">
+                {teachers.map((t) => {
+                  const plainPass = decryptPassword(t.passwordHash);
+                  return (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => selectQuickAccount(t.username, plainPass)}
+                      className="p-2 text-left bg-white hover:bg-blue-50/70 hover:border-blue-300 border border-slate-200 rounded-lg transition group cursor-pointer"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-slate-800 text-[11px] group-hover:text-blue-600">
+                          {t.name}
+                        </span>
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded font-extrabold uppercase ${t.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
+                          {t.role}
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-slate-500 mt-0.5">
+                        User: <code className="text-slate-700 font-mono font-semibold">{t.username}</code> | Pass: <code className="text-slate-700 font-mono">{plainPass}</code>
+                      </p>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 

@@ -21,7 +21,14 @@ import { Menu, Clock, ShieldAlert, CheckCircle, RefreshCw, Database } from 'luci
 import { fetchAllFromSupabase, subscribeToSync, initRealtimeSync, SyncState } from './utils/supabase';
 
 export default function App() {
-  const [session, setSession] = useState<UserSession | null>(null);
+  const [session, setSession] = useState<UserSession | null>(() => {
+    try {
+      const raw = localStorage.getItem('absensi_sd_session');
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  });
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [rekapParams, setRekapParams] = useState<{ classId?: string; month?: number; year?: number }>({});
@@ -61,6 +68,7 @@ export default function App() {
 
   const handleLogin = (userSession: UserSession) => {
     setSession(userSession);
+    localStorage.setItem('absensi_sd_session', JSON.stringify(userSession));
     setActiveTab('dashboard');
     setIsLoggedOutForInactivity(false);
     resetInactivityTimer();
@@ -68,6 +76,7 @@ export default function App() {
 
   const handleLogout = () => {
     setSession(null);
+    localStorage.removeItem('absensi_sd_session');
     clearInactivityTimer();
   };
 
