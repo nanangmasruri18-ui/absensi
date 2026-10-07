@@ -51,6 +51,7 @@ export interface Attendance {
   studentId: string;
   date: string; // YYYY-MM-DD
   status: AttendanceStatus;
+  notes?: string;
   updatedAt: string;
 }
 

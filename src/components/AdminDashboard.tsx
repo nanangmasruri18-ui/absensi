@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../utils/db';
 import { SchoolProfile, ClassRombel, Teacher, Student } from '../types';
-import { fetchAllFromSupabase } from '../utils/supabase';
+import { fetchAllFromSupabase, getSupabaseStatus, checkSupabaseTables, SupabaseStatusInfo } from '../utils/supabase';
 import { 
   Building2, 
   Users, 
@@ -16,8 +16,89 @@ import {
   AlertCircle,
   RefreshCw,
   Cloud,
-  Database
+  Database,
+  Copy,
+  Check,
+  ExternalLink,
+  Code2,
+  X
 } from 'lucide-react';
+
+const SQL_SCHEMA_STRING = `-- SKRIP SETUP DATABASE SUPABASE UNTUK APLIKASI ABSENSI SISWA SD
+-- Salin dan jalankan seluruh isi skrip ini di Supabase SQL Editor:
+create table if not exists public.school (
+  id text primary key default 'school-1',
+  name text not null default 'SD Negeri Gelora 01',
+  address text default 'Jl. Pemuda No. 45, Kel. Gelora, Kec. Tanah Abang, Kota Jakarta Pusat, DKI Jakarta',
+  npsn text default '20103456',
+  admin_name text default 'Admin Gelora',
+  updated_at timestamptz default now()
+);
+
+create table if not exists public.classes (
+  id text primary key,
+  name text not null,
+  grade text not null,
+  homeroom_teacher_id text default '',
+  updated_at timestamptz default now()
+);
+
+create table if not exists public.teachers (
+  id text primary key,
+  nip text default '',
+  name text not null,
+  gender text default 'L',
+  username text unique not null,
+  password_hash text not null,
+  assigned_class_id text default '',
+  role text default 'guru',
+  updated_at timestamptz default now()
+);
+
+create table if not exists public.students (
+  id text primary key,
+  nis text default '',
+  nisn text default '',
+  name text not null,
+  gender text default 'L',
+  birth_place text default '',
+  birth_date text default '',
+  class_id text not null,
+  updated_at timestamptz default now()
+);
+
+create table if not exists public.holidays (
+  id text primary key,
+  date text not null,
+  name text not null,
+  updated_at timestamptz default now()
+);
+
+create table if not exists public.attendance (
+  id text primary key,
+  class_id text not null,
+  student_id text not null,
+  date text not null,
+  status text not null check (status in ('H', 'S', 'I', 'A')),
+  notes text default '',
+  updated_at timestamptz default now()
+);
+
+alter table public.school enable row level security;
+alter table public.classes enable row level security;
+alter table public.teachers enable row level security;
+alter table public.students enable row level security;
+alter table public.holidays enable row level security;
+alter table public.attendance enable row level security;
+
+create policy "Akses anon school" on public.school for all using (true) with check (true);
+create policy "Akses anon classes" on public.classes for all using (true) with check (true);
+create policy "Akses anon teachers" on public.teachers for all using (true) with check (true);
+create policy "Akses anon students" on public.students for all using (true) with check (true);
+create policy "Akses anon holidays" on public.holidays for all using (true) with check (true);
+create policy "Akses anon attendance" on public.attendance for all using (true) with check (true);
+
+alter publication supabase_realtime add table public.attendance;`;
 
 export default function AdminDashboard() {
   const [school, setSchool] = useState<SchoolProfile>(db.getSchool());
@@ -30,6 +111,11 @@ export default function AdminDashboard() {
   const [refreshMessage, setRefreshMessage] = useState('');
   const [refreshError, setRefreshError] = useState(false);
 
+  // Supabase Status and SQL modal
+  const [sbStatus, setSbStatus] = useState<SupabaseStatusInfo>(getSupabaseStatus());
+  const [showSqlModal, setShowSqlModal] = useState(false);
+  const [copiedSql, setCopiedSql] = useState(false);
+
   const reloadData = () => {
     setSchool(db.getSchool());
     setClasses(db.getClasses());
@@ -39,6 +125,10 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
+    checkSupabaseTables().then(() => {
+      setSbStatus(getSupabaseStatus());
+    });
+
     window.addEventListener('db-synced', reloadData);
     window.addEventListener('absensi-updated', reloadData);
     return () => {
@@ -50,12 +140,18 @@ export default function AdminDashboard() {
   const handleSupabaseRefresh = async () => {
     setIsRefreshing(true);
     setRefreshError(false);
-    setRefreshMessage('Harap tunggu, sedang menyinkronkan data dengan database sekolah...');
+    setRefreshMessage('Harap tunggu, sedang menyinkronkan data dengan Supabase dan database sekolah...');
     try {
+      const isSbReady = await checkSupabaseTables();
+      setSbStatus(getSupabaseStatus());
       const success = await fetchAllFromSupabase(true);
       reloadData();
       if (success) {
-        setRefreshMessage('Penyelarasan berhasil! Sistem memuat data terbaru.');
+        setRefreshMessage(
+          isSbReady 
+            ? '✓ Penyelarasan berhasil! Terhubung langsung ke Supabase Cloud.' 
+            : 'Penyelarasan berhasil melalui server database dan cache lokal.'
+        );
         setTimeout(() => setRefreshMessage(''), 3500);
       } else {
         setRefreshError(true);
@@ -68,6 +164,16 @@ export default function AdminDashboard() {
       setTimeout(() => setRefreshMessage(''), 3000);
     } finally {
       setIsRefreshing(false);
+    }
+  };
+
+  const copySqlToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(SQL_SCHEMA_STRING);
+      setCopiedSql(true);
+      setTimeout(() => setCopiedSql(false), 3000);
+    } catch (e) {
+      // Fallback
     }
   };
 
@@ -149,25 +255,67 @@ export default function AdminDashboard() {
         </p>
       </div>
 
-      {/* Database Sync Controls */}
-      <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-start sm:items-center gap-3">
-          <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
-            <Database size={20} />
+      {/* Cloud & Supabase Sync Status Card */}
+      <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-start sm:items-center gap-3">
+            <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
+              <Database size={20} />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-xs font-bold text-slate-800">Sinkronisasi Database Cloud (Supabase & Multi-Browser)</h3>
+                {sbStatus.isConfigured && sbStatus.isTablesReady && (
+                  <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    Supabase Cloud Aktif
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] text-slate-500 font-medium mt-0.5">
+                Sinkronkan otomatis data absensi antar-guru, browser lain, handphone, dan laptop
+              </p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-xs font-bold text-slate-800">Sinkronisasi Database Terpusat Sekolah</h3>
-            <p className="text-[11px] text-slate-500 font-medium">Selaraskan data siswa, kelas rombel, guru, dan rekaman presensi dengan server database</p>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => setShowSqlModal(true)}
+              className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+            >
+              <Code2 size={13} className="text-blue-600" />
+              <span>Panduan SQL Supabase</span>
+            </button>
+            <button
+              onClick={handleSupabaseRefresh}
+              disabled={isRefreshing}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-extrabold transition flex items-center justify-center gap-2 shadow-sm disabled:bg-slate-300 disabled:cursor-not-allowed cursor-pointer"
+            >
+              <RefreshCw size={13} className={isRefreshing ? 'animate-spin' : ''} />
+              {isRefreshing ? 'Menyinkronkan...' : 'Sinkronkan Sekarang'}
+            </button>
           </div>
         </div>
-        <button
-          onClick={handleSupabaseRefresh}
-          disabled={isRefreshing}
-          className="px-4 py-2 bg-slate-950 hover:bg-slate-800 text-white rounded-xl text-xs font-extrabold transition flex items-center justify-center gap-2 shadow-sm disabled:bg-slate-300 disabled:cursor-not-allowed shrink-0 cursor-pointer"
-        >
-          <RefreshCw size={14} className={isRefreshing ? 'animate-spin' : ''} />
-          {isRefreshing ? 'Menyinkronkan...' : 'Sinkronkan Data Sekarang'}
-        </button>
+
+        {/* Supabase status notice banner if SQL is not yet executed */}
+        {sbStatus.isConfigured && !sbStatus.isTablesReady && (
+          <div className="p-3.5 bg-amber-50 border border-amber-200/80 rounded-xl text-xs text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+            <div className="flex items-start gap-2">
+              <AlertCircle size={16} className="text-amber-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-bold">Project Supabase Terhubung, Skrip SQL Belum Dijalankan</p>
+                <p className="text-[11px] text-amber-700 mt-0.5">
+                  Agar absensi yang diinput guru di browser/HP lain langsung masuk otomatis, salin skrip SQL dan jalankan di SQL Editor Supabase Anda.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowSqlModal(true)}
+              className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-[11px] font-bold rounded-lg shrink-0 cursor-pointer shadow-xs"
+            >
+              Buka Skrip SQL Setup
+            </button>
+          </div>
+        )}
       </div>
 
       {refreshMessage && (
@@ -334,6 +482,69 @@ export default function AdminDashboard() {
           <strong className="text-blue-900">Catatan Harian Admin:</strong> Laporan persentase kehadiran sekolah dihitung berdasarkan tanggal absensi aktif terakhir terdokumentasi (<strong className="text-blue-900">Sabtu, 20 Juni 2026</strong>), sehingga persentase realistik tetap terpantau meskipun sekolah ditutup pada hari Minggu.
         </div>
       </div>
+
+      {/* SQL Setup Modal */}
+      {showSqlModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-100 max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl">
+                  <Database size={20} />
+                </div>
+                <div>
+                  <h3 className="text-sm sm:text-base font-bold text-slate-800">Skrip Database Supabase Cloud</h3>
+                  <p className="text-xs text-slate-500 font-medium">Aktifkan sinkronisasi otomatis antar-seluruh browser & perangkat</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowSqlModal(false)}
+                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="space-y-3.5 text-xs text-slate-600 overflow-y-auto pr-1">
+              <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200/70 space-y-1.5 font-medium leading-relaxed">
+                <p className="font-bold text-slate-800">Langkah 1 Menit Menghubungkan:</p>
+                <p>1. Buka <strong>Supabase Dashboard</strong> Anda di menu <strong>SQL Editor</strong>.</p>
+                <p>2. Klik tombol <strong>"Salin Skrip SQL"</strong> di bawah.</p>
+                <p>3. Tempelkan (*paste*) di SQL Editor Supabase, lalu klik <strong>RUN</strong>.</p>
+                <p>4. Selesai! Seluruh data absensi dari guru di browser/HP mana pun akan otomatis tersinkronisasi.</p>
+              </div>
+
+              <div className="relative">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Skrip SQL Supabase:</span>
+                  <button
+                    onClick={copySqlToClipboard}
+                    className="flex items-center gap-1.5 px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition shadow-xs cursor-pointer"
+                  >
+                    {copiedSql ? <Check size={13} className="text-emerald-200" /> : <Copy size={13} />}
+                    <span>{copiedSql ? 'Berhasil Disalin!' : 'Salin Skrip SQL'}</span>
+                  </button>
+                </div>
+                <pre className="bg-slate-900 text-slate-200 p-3.5 rounded-xl text-[11px] font-mono h-48 overflow-y-auto leading-relaxed border border-slate-800">
+                  {SQL_SCHEMA_STRING}
+                </pre>
+              </div>
+            </div>
+
+            <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between">
+              <span className="text-[11px] text-slate-400 font-medium">
+                URL Supabase: {sbStatus.url || 'https://rdsptjslgnjyzizmioru.supabase.co'}
+              </span>
+              <button
+                onClick={() => setShowSqlModal(false)}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
