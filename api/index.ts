@@ -176,6 +176,33 @@ export default async function handler(req: any, res: any) {
       res.statusCode = 200;
       return res.end(JSON.stringify({ success: true, updatedAt: serverlessCache.updatedAt }));
     } else {
+      // If attendance cache in serverless is empty, hydrate from Supabase Cloud
+      if ((!serverlessCache.attendance || serverlessCache.attendance.length === 0) && getCleanSupabaseUrl() && getSupabaseKey()) {
+        try {
+          const fetchRes = await fetch(`${getCleanSupabaseUrl()}/rest/v1/attendance?select=*&order=date.asc`, {
+            headers: {
+              'apikey': getSupabaseKey(),
+              'Authorization': `Bearer ${getSupabaseKey()}`,
+              'Range-Unit': 'items',
+              'Range': '0-4999'
+            }
+          });
+          if (fetchRes.ok) {
+            const data = await fetchRes.json();
+            if (Array.isArray(data) && data.length > 0) {
+              serverlessCache.attendance = data.map((r: any) => ({
+                id: r.id,
+                classId: r.class_id,
+                studentId: r.student_id,
+                date: r.date,
+                status: r.status,
+                notes: r.notes || '',
+                updatedAt: r.updated_at
+              }));
+            }
+          }
+        } catch {}
+      }
       res.statusCode = 200;
       return res.end(JSON.stringify(serverlessCache));
     }

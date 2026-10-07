@@ -122,6 +122,70 @@ export async function checkSupabaseTables(): Promise<boolean> {
   }
 }
 
+// Helper to fetch all attendance rows across pages (bypasses PostgREST 1000 limit)
+async function fetchAllAttendanceRows(client: SupabaseClient): Promise<{ data: any[]; error: any }> {
+  const allRows: any[] = [];
+  let page = 0;
+  const pageSize = 1000;
+  while (true) {
+    const { data, error } = await client
+      .from('attendance')
+      .select('*')
+      .order('date', { ascending: true })
+      .range(page * pageSize, (page + 1) * pageSize - 1);
+    
+    if (error) {
+      return { data: allRows, error };
+    }
+    if (!data || data.length === 0) break;
+    allRows.push(...data);
+    if (data.length < pageSize) break;
+    page++;
+  }
+  return { data: allRows, error: null };
+}
+
+// Dedicated helper to directly push day's attendance records to Supabase & backend
+export async function pushAttendanceRecords(records: Attendance[]): Promise<boolean> {
+  if (!records || records.length === 0) return true;
+
+  // 1. Direct Supabase Cloud Upsert
+  if (supabase) {
+    try {
+      const rows = records.map((a: Attendance) => ({
+        id: a.id,
+        class_id: a.classId,
+        student_id: a.studentId,
+        date: a.date,
+        status: a.status,
+        notes: a.notes || '',
+        updated_at: a.updatedAt || new Date().toISOString(),
+      }));
+      await supabase.from('attendance').upsert(rows, { onConflict: 'id' });
+    } catch (err) {
+      console.warn('Direct push to Supabase attendance warning:', err);
+    }
+  }
+
+  // 2. Local backend / Vercel API
+  const sample = records[0];
+  if (sample) {
+    fetch('/api/attendance', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        classId: sample.classId,
+        date: sample.date,
+        records,
+      }),
+    }).catch(() => {});
+  }
+
+  // 3. Broadcast to all open tabs and components
+  broadcastLocalUpdate(records.length, 'user-save');
+  return true;
+}
+
 // 4. Fetch all data: Tries Supabase first, falls back to /api/db and localStorage
 export async function fetchAllFromSupabase(force = false): Promise<boolean> {
   if (isSyncInProgress && !force) return true;
@@ -146,7 +210,7 @@ export async function fetchAllFromSupabase(force = false): Promise<boolean> {
           supabase.from('teachers').select('*'),
           supabase.from('students').select('*'),
           supabase.from('holidays').select('*'),
-          supabase.from('attendance').select('*'),
+          fetchAllAttendanceRows(supabase),
         ]);
 
         // If attendance table exists and succeeds:
@@ -218,8 +282,8 @@ export async function fetchAllFromSupabase(force = false): Promise<boolean> {
           }
 
           // Format attendance
-          if (attendanceRes.data) {
-            const attendanceObj: Attendance[] = attendanceRes.data.map((r: any) => ({
+          if (attendanceRes.data && attendanceRes.data.length > 0) {
+            const remoteAttendance: Attendance[] = attendanceRes.data.map((r: any) => ({
               id: r.id,
               classId: r.class_id,
               studentId: r.student_id,
@@ -228,10 +292,71 @@ export async function fetchAllFromSupabase(force = false): Promise<boolean> {
               notes: r.notes || '',
               updatedAt: r.updated_at,
             }));
-            localStorage.setItem(KEYS.ATTENDANCE, JSON.stringify(attendanceObj));
+
+            // Merge with local records so unsaved offline inputs are not lost
+            let localRecords: Attendance[] = [];
+            try {
+              const raw = localStorage.getItem(KEYS.ATTENDANCE);
+              if (raw) localRecords = JSON.parse(raw);
+            } catch {}
+
+            const recordMap = new Map<string, Attendance>();
+            // Remote records are primary source of truth
+            remoteAttendance.forEach((a) => recordMap.set(a.id, a));
+            // Keep local records if not present in remote
+            localRecords.forEach((a) => {
+              if (!recordMap.has(a.id)) {
+                recordMap.set(a.id, a);
+              }
+            });
+
+            const mergedAttendance = Array.from(recordMap.values());
+            localStorage.setItem(KEYS.ATTENDANCE, JSON.stringify(mergedAttendance));
+
+            // Sync to local server cache as well
+            fetch('/api/attendance', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(mergedAttendance),
+            }).catch(() => {});
 
             // Notify UI
-            broadcastLocalUpdate(attendanceObj.length, 'supabase-cloud');
+            broadcastLocalUpdate(mergedAttendance.length, 'supabase-cloud');
+
+            updateSyncState({
+              status: 'synced',
+              lastSyncedAt: new Date().toISOString(),
+              errorMessage: undefined,
+              backendType: 'supabase',
+            });
+            return true;
+          } else {
+            // Supabase attendance table is empty!
+            // CRITICAL: DO NOT wipe local data! Check local data or /api/db and push UP to Supabase to restore it!
+            let existingLocal: Attendance[] = [];
+            try {
+              const raw = localStorage.getItem(KEYS.ATTENDANCE);
+              if (raw) existingLocal = JSON.parse(raw);
+            } catch {}
+
+            if (existingLocal.length === 0) {
+              try {
+                const resp = await fetch('/api/db');
+                if (resp.ok) {
+                  const dbData = await resp.json();
+                  if (dbData.attendance && dbData.attendance.length > 0) {
+                    existingLocal = dbData.attendance;
+                    localStorage.setItem(KEYS.ATTENDANCE, JSON.stringify(existingLocal));
+                  }
+                }
+              } catch {}
+            }
+
+            if (existingLocal.length > 0) {
+              // Push local data up to Supabase to populate it!
+              pushToSupabase(KEYS.ATTENDANCE, existingLocal);
+              broadcastLocalUpdate(existingLocal.length, 'local-restored');
+            }
 
             updateSyncState({
               status: 'synced',
@@ -319,7 +444,11 @@ export async function pushToSupabase(key: string, value: any): Promise<boolean> 
             notes: a.notes || '',
             updated_at: a.updatedAt || new Date().toISOString(),
           }));
-          await supabase.from('attendance').upsert(rows, { onConflict: 'id' });
+          const CHUNK_SIZE = 250;
+          for (let i = 0; i < rows.length; i += CHUNK_SIZE) {
+            const chunk = rows.slice(i, i + CHUNK_SIZE);
+            await supabase.from('attendance').upsert(chunk, { onConflict: 'id' });
+          }
         } else if (key === KEYS.STUDENTS && Array.isArray(value)) {
           const rows = value.map((s: Student) => ({
             id: s.id,

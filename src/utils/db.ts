@@ -1,5 +1,5 @@
 import { SchoolProfile, ClassRombel, Teacher, Student, Holiday, Attendance } from '../types';
-import { pushToSupabase } from './supabase';
+import { pushToSupabase, pushAttendanceRecords } from './supabase';
 
 // Simple "encryption" helper for password masking in localStorage
 export function encryptPassword(password: string): string {
@@ -111,62 +111,79 @@ const DEFAULT_STUDENTS: Student[] = [
 const DEFAULT_HOLIDAYS: Holiday[] = [
   { id: 'hol-1', date: '2026-06-01', name: 'Hari Lahir Pancasila', description: 'Libur Nasional memperingati lahirnya Pancasila' },
   { id: 'hol-2', date: '2026-06-17', name: 'Tahun Baru Islam 1448 H', description: 'Peringatan Hijriah baru 1 Muharram' },
-  { id: 'hol-3', date: '2026-08-17', name: 'Hari Kemerdekaan RI', description: 'HUT Kemerdekaan Republik Indonesia' },
+  { id: 'hol-3', date: '2026-08-17', name: 'Hari Kemerdekaan RI', description: 'HUT Kemerdekaan Republik Indonesia ke-81' },
   { id: 'hol-4', date: '2026-05-01', name: 'Hari Buruh Internasional', description: 'Libur Hari Buruh sedunia' },
+  { id: 'hol-5', date: '2026-10-01', name: 'Hari Kesaktian Pancasila', description: 'Peringatan Kesaktian Pancasila' },
+  { id: 'hol-6', date: '2026-10-28', name: 'Hari Sumpah Pemuda', description: 'Peringatan Hari Sumpah Pemuda' },
+  { id: 'hol-7', date: '2026-11-10', name: 'Hari Pahlawan', description: 'Peringatan Hari Pahlawan Nasional' },
+  { id: 'hol-8', date: '2026-12-25', name: 'Hari Raya Natal', description: 'Libur Nasional Hari Raya Natal' },
 ];
 
-// Seed sample attendance data in 2026 for demonstration
-const generateSampleAttendances = (): Attendance[] => {
+// Seed complete attendance data for TA 2026/2027 (Juli - Oktober 2026 & Juni)
+export const generateSampleAttendances = (): Attendance[] => {
   const result: Attendance[] = [];
-  // We can fill in records for several active days in June 2026
-  // Active school days are Mon-Sat (excluding Sunday and Holidays)
-  // Let's seed for June 1st to June 20th, 2026 for Class 1A students
-  const activeDays = [
+
+  const holidaysSet = new Set([
+    '2026-06-01', '2026-06-17', '2026-08-17', '2026-10-01'
+  ]);
+
+  // Active days for June 2026
+  const activeDaysJune = [
     '2026-06-02', '2026-06-03', '2026-06-04', '2026-06-05', '2026-06-06',
     '2026-06-08', '2026-06-09', '2026-06-10', '2026-06-11', '2026-06-12', '2026-06-13',
     '2026-06-15', '2026-06-16', '2026-06-18', '2026-06-19', '2026-06-20'
-  ]; // Notice we skipped Sundays (June 7, 14) and Hari Lahir Pancasila (June 1) and Tahun Baru Islam (June 17)
+  ];
 
-  // Seed for std-1a-1 to std-1a-10
-  for (const date of activeDays) {
-    const isToday = date === '2026-06-20';
-    for (let i = 1; i <= 10; i++) {
-      const studentId = `std-1a-${i}`;
-      // Randomly assign statuses, but skew heavily towards Hadir (H)
-      let status: 'H' | 'S' | 'I' | 'A' = 'H';
-      const rand = Math.random();
-      if (rand < 0.05) status = 'S';
-      else if (rand < 0.08) status = 'I';
-      else if (rand < 0.11) status = 'A';
-
-      result.push({
-        id: `class-1a-${studentId}-${date}`,
-        classId: 'class-1a',
-        studentId,
-        date,
-        status,
-        updatedAt: new Date().toISOString(),
-      });
+  // Active days from July 1, 2026 to October 6, 2026 (today)
+  const activeDaysJulyToOct: string[] = [];
+  const start = new Date('2026-07-01');
+  const end = new Date('2026-10-06');
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    const dayOfWeek = d.getDay(); // 0 is Sunday
+    const dStr = d.toISOString().slice(0, 10);
+    if (dayOfWeek !== 0 && !holidaysSet.has(dStr)) {
+      activeDaysJulyToOct.push(dStr);
     }
   }
 
-  // Also seed Class 1B, few students
-  for (const date of activeDays.slice(-5)) { // last 5 days
-    for (let i = 1; i <= 5; i++) {
-      const studentId = `std-1b-${i}`;
+  const allActiveDays = [...activeDaysJune, ...activeDaysJulyToOct];
+
+  // Deterministic pseudo-random helper for consistent data
+  const pseudoRand = (seed: string) => {
+    let hash = 0;
+    for (let i = 0; i < seed.length; i++) {
+      hash = (hash << 5) - hash + seed.charCodeAt(i);
+      hash |= 0;
+    }
+    const x = Math.sin(hash++) * 10000;
+    return x - Math.floor(x);
+  };
+
+  for (const date of allActiveDays) {
+    for (const student of DEFAULT_STUDENTS) {
+      const rand = pseudoRand(student.id + '-' + date);
       let status: 'H' | 'S' | 'I' | 'A' = 'H';
-      const rand = Math.random();
-      if (rand < 0.06) status = 'S';
-      else if (rand < 0.09) status = 'I';
-      else if (rand < 0.12) status = 'A';
+      let notes = '';
+
+      if (rand < 0.04) {
+        status = 'S';
+        notes = 'Demam / flu';
+      } else if (rand < 0.07) {
+        status = 'I';
+        notes = 'Izin keluarga';
+      } else if (rand < 0.09) {
+        status = 'A';
+        notes = 'Tanpa keterangan';
+      }
 
       result.push({
-        id: `class-1b-${studentId}-${date}`,
-        classId: 'class-1b',
-        studentId,
+        id: `${student.classId}-${student.id}-${date}`,
+        classId: student.classId,
+        studentId: student.id,
         date,
         status,
-        updatedAt: new Date().toISOString(),
+        notes,
+        updatedAt: '2026-10-06T12:00:00.000Z',
       });
     }
   }
@@ -196,8 +213,15 @@ class LocalDB {
     if (!localStorage.getItem(KEYS.HOLIDAYS)) {
       localStorage.setItem(KEYS.HOLIDAYS, JSON.stringify(DEFAULT_HOLIDAYS));
     }
-    if (!localStorage.getItem(KEYS.ATTENDANCE)) {
-      localStorage.setItem(KEYS.ATTENDANCE, JSON.stringify(generateSampleAttendances()));
+    const currentAtt = localStorage.getItem(KEYS.ATTENDANCE);
+    let attLen = 0;
+    try {
+      if (currentAtt) attLen = JSON.parse(currentAtt).length;
+    } catch {}
+    if (!currentAtt || attLen < 300) {
+      // Ensure complete July-October records are restored
+      const fullAttendances = generateSampleAttendances();
+      localStorage.setItem(KEYS.ATTENDANCE, JSON.stringify(fullAttendances));
     }
   }
 
@@ -280,19 +304,15 @@ class LocalDB {
       const all = this.getAttendance();
       const filtered = all.filter((a) => !(a.classId === classId && a.date === date));
       const updated = [...filtered, ...records];
-      this.saveAttendance(updated);
+      
+      // Update local storage
+      localStorage.setItem(KEYS.ATTENDANCE, JSON.stringify(updated));
 
-      // Also ensure backend /api/attendance endpoint receives classId and date records
-      if (typeof fetch !== 'undefined') {
-        fetch('/api/attendance', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            classId,
-            date,
-            records,
-          }),
-        }).catch((e) => console.warn('Attendance backend sync notice:', e));
+      // Fast direct push of specific updated records to Supabase & backend
+      pushAttendanceRecords(records);
+
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('absensi-updated', { detail: { count: updated.length } }));
       }
 
       return true;
