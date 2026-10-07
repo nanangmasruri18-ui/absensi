@@ -281,7 +281,7 @@ export async function fetchAllFromSupabase(force = false): Promise<boolean> {
             localStorage.setItem(KEYS.HOLIDAYS, JSON.stringify(holidaysObj));
           }
 
-          // Also sync retrieved Supabase models to local backend /api/db
+          // Also sync retrieved Supabase models to local backend /api/db (marked as internal-sync)
           try {
             const serverDbPayload: Record<string, any> = {};
             if (schoolRes.data && schoolRes.data.length > 0) serverDbPayload.school = JSON.parse(localStorage.getItem(KEYS.SCHOOL) || '{}');
@@ -292,7 +292,10 @@ export async function fetchAllFromSupabase(force = false): Promise<boolean> {
             if (Object.keys(serverDbPayload).length > 0) {
               fetch('/api/db', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                  'Content-Type': 'application/json',
+                  'x-sync-source': 'internal-sync'
+                },
                 body: JSON.stringify(serverDbPayload),
               }).catch(() => {});
             }
@@ -310,35 +313,53 @@ export async function fetchAllFromSupabase(force = false): Promise<boolean> {
               updatedAt: r.updated_at,
             }));
 
-            // Merge with local records so unsaved offline inputs are not lost
+            // Read current local records
             let localRecords: Attendance[] = [];
             try {
               const raw = localStorage.getItem(KEYS.ATTENDANCE);
               if (raw) localRecords = JSON.parse(raw);
             } catch {}
 
+            // CRITICAL TIMESTAMP-BASED RESOLUTION:
+            // Never overwrite newer local edits with older remote data!
             const recordMap = new Map<string, Attendance>();
-            // Remote records are primary source of truth
             remoteAttendance.forEach((a) => recordMap.set(a.id, a));
-            // Keep local records if not present in remote
-            localRecords.forEach((a) => {
-              if (!recordMap.has(a.id)) {
-                recordMap.set(a.id, a);
+
+            localRecords.forEach((local) => {
+              const remote = recordMap.get(local.id);
+              if (!remote) {
+                recordMap.set(local.id, local);
+              } else {
+                const localTime = local.updatedAt ? new Date(local.updatedAt).getTime() : 0;
+                const remoteTime = remote.updatedAt ? new Date(remote.updatedAt).getTime() : 0;
+                // If local edit is more recent, keep local so UI never flips back to old state
+                if (localTime > remoteTime) {
+                  recordMap.set(local.id, local);
+                }
               }
             });
 
             const mergedAttendance = Array.from(recordMap.values());
-            localStorage.setItem(KEYS.ATTENDANCE, JSON.stringify(mergedAttendance));
+            const prevRaw = localStorage.getItem(KEYS.ATTENDANCE);
+            const nextRaw = JSON.stringify(mergedAttendance);
 
-            // Sync to local server cache as well
-            fetch('/api/attendance', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(mergedAttendance),
-            }).catch(() => {});
+            // Only update and broadcast if attendance data actually changed
+            if (prevRaw !== nextRaw) {
+              localStorage.setItem(KEYS.ATTENDANCE, nextRaw);
 
-            // Notify UI
-            broadcastLocalUpdate(mergedAttendance.length, 'supabase-cloud');
+              // Notify UI smoothly
+              broadcastLocalUpdate(mergedAttendance.length, 'supabase-cloud');
+
+              // Sync to local server cache with internal-sync header to avoid echo loop
+              fetch('/api/attendance', {
+                method: 'POST',
+                headers: { 
+                  'Content-Type': 'application/json',
+                  'x-sync-source': 'internal-sync'
+                },
+                body: nextRaw,
+              }).catch(() => {});
+            }
 
             updateSyncState({
               status: 'synced',
@@ -559,9 +580,16 @@ export async function pushToSupabase(key: string, value: any): Promise<boolean> 
   }
 }
 
-// 6. Broadcast helper to trigger instant React component updates
+// 6. Broadcast helper to trigger instant React component updates with debounce
+let broadcastTimer: any = null;
 function broadcastLocalUpdate(count: number, source: string) {
-  if (typeof window !== 'undefined') {
+  if (typeof window === 'undefined') return;
+
+  if (broadcastTimer) {
+    clearTimeout(broadcastTimer);
+  }
+
+  broadcastTimer = setTimeout(() => {
     window.dispatchEvent(
       new CustomEvent('absensi-updated', {
         detail: { count, source },
@@ -572,7 +600,7 @@ function broadcastLocalUpdate(count: number, source: string) {
         detail: { source },
       })
     );
-  }
+  }, 100);
 }
 
 // 7. Multi-browser real-time synchronization manager
@@ -590,6 +618,10 @@ export function initRealtimeSync(): () => void {
   // Initial immediate fetch
   fetchAllFromSupabase();
 
+  let sbDebounceTimer: any = null;
+  let sseDebounceTimer: any = null;
+  let focusDebounceTimer: any = null;
+
   // A. Supabase Realtime Channel (Instant multi-device broadcast)
   let sbChannel: any = null;
   if (supabase) {
@@ -599,8 +631,11 @@ export function initRealtimeSync(): () => void {
         .on(
           'postgres_changes',
           { event: '*', schema: 'public', table: 'attendance' },
-          (payload) => {
-            fetchAllFromSupabase(true);
+          () => {
+            if (sbDebounceTimer) clearTimeout(sbDebounceTimer);
+            sbDebounceTimer = setTimeout(() => {
+              fetchAllFromSupabase(true);
+            }, 1200);
           }
         )
         .subscribe();
@@ -617,7 +652,10 @@ export function initRealtimeSync(): () => void {
       try {
         const data = JSON.parse(event.data);
         if (data.type === 'db_updated') {
-          fetchAllFromSupabase(true);
+          if (sseDebounceTimer) clearTimeout(sseDebounceTimer);
+          sseDebounceTimer = setTimeout(() => {
+            fetchAllFromSupabase(true);
+          }, 1500);
         } else if (data.type === 'connected') {
           if (data.updatedAt) {
             lastKnownServerTime = data.updatedAt;
@@ -627,7 +665,7 @@ export function initRealtimeSync(): () => void {
     };
   } catch (e) {}
 
-  // C. Heartbeat polling fallback (checks version every 3 seconds)
+  // C. Heartbeat polling fallback (checks version every 15 seconds, non-intrusive)
   const pollInterval = setInterval(async () => {
     try {
       const res = await fetch('/api/db/version', { cache: 'no-store' });
@@ -639,11 +677,14 @@ export function initRealtimeSync(): () => void {
         }
       }
     } catch {}
-  }, 3000);
+  }, 15000);
 
-  // D. Instant sync on window focus or tab visibility change
+  // D. Instant sync on window focus or tab visibility change (debounced)
   const handleFocusOrVisible = () => {
-    fetchAllFromSupabase(true);
+    if (focusDebounceTimer) clearTimeout(focusDebounceTimer);
+    focusDebounceTimer = setTimeout(() => {
+      fetchAllFromSupabase();
+    }, 800);
   };
 
   window.addEventListener('focus', handleFocusOrVisible);

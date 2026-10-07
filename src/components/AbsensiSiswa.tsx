@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { db, getDayNameID, isSunday, isHoliday } from '../utils/db';
 import { Student, ClassRombel, Attendance, UserSession, AttendanceStatus } from '../types';
 import { 
@@ -58,14 +58,26 @@ export default function AbsensiSiswa({ session, onNavigateToRekap }: AbsensiSisw
   const [saveError, setSaveError] = useState('');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
+  // Guards to prevent background sync from wiping active teacher input or fresh save
+  const isDirtyRef = useRef(false);
+  const lastSavedAtRef = useRef(0);
+  const prevDateClassRef = useRef(`${selectedClassId}_${selectedDate}`);
+
   // Live listener to auto-refresh when attendance or database is synced from another browser
   useEffect(() => {
+    let t: any = null;
     const handleUpdate = () => {
-      setRefreshTrigger((k) => k + 1);
+      // Don't auto-refresh if user has unsaved edits or just saved
+      if (isDirtyRef.current || Date.now() - lastSavedAtRef.current < 4000) return;
+      if (t) clearTimeout(t);
+      t = setTimeout(() => {
+        setRefreshTrigger((k) => k + 1);
+      }, 150);
     };
     window.addEventListener('db-synced', handleUpdate);
     window.addEventListener('absensi-updated', handleUpdate);
     return () => {
+      if (t) clearTimeout(t);
       window.removeEventListener('db-synced', handleUpdate);
       window.removeEventListener('absensi-updated', handleUpdate);
     };
@@ -92,6 +104,18 @@ export default function AbsensiSiswa({ session, onNavigateToRekap }: AbsensiSisw
       setClassStudents([]);
       setAttendanceGrid({});
       return;
+    }
+
+    const currentKey = `${selectedClassId}_${selectedDate}`;
+    const dateClassChanged = prevDateClassRef.current !== currentKey;
+    if (dateClassChanged) {
+      prevDateClassRef.current = currentKey;
+      isDirtyRef.current = false;
+    } else {
+      // If same date/class and user is editing or just saved, keep current grid stable!
+      if (isDirtyRef.current || Date.now() - lastSavedAtRef.current < 4000) {
+        return;
+      }
     }
 
     // Fetch students of this class and SORT alphabetically (urut abjad)
@@ -122,18 +146,26 @@ export default function AbsensiSiswa({ session, onNavigateToRekap }: AbsensiSisw
     const savedList = db.getAttendance().filter((a) => a.classId === selectedClassId && a.date === selectedDate);
     
     const initialGrid: Record<string, AttendanceStatus> = {};
+    let hasDiff = false;
     list.forEach((s) => {
       const match = savedList.find((a) => a.studentId === s.id);
-      initialGrid[s.id] = match ? match.status : 'H'; // Default to 'H' (Hadir) for ease of input
+      const val = match ? match.status : 'H';
+      initialGrid[s.id] = val;
+      if (attendanceGrid[s.id] !== val) {
+        hasDiff = true;
+      }
     });
 
-    setAttendanceGrid(initialGrid);
+    if (dateClassChanged || hasDiff || Object.keys(attendanceGrid).length === 0) {
+      setAttendanceGrid(initialGrid);
+    }
     setSaveSuccess(false);
     setSaveError('');
   }, [selectedDate, selectedClassId, refreshTrigger]);
 
   // Bulk set all students to H
   const setAllHadir = () => {
+    isDirtyRef.current = true;
     const updated: Record<string, AttendanceStatus> = {};
     classStudents.forEach((s) => {
       updated[s.id] = 'H';
@@ -142,6 +174,7 @@ export default function AbsensiSiswa({ session, onNavigateToRekap }: AbsensiSisw
   };
 
   const handleStatusChange = (studentId: string, status: AttendanceStatus) => {
+    isDirtyRef.current = true;
     setAttendanceGrid((prev) => ({
       ...prev,
       [studentId]: status,
@@ -197,6 +230,8 @@ export default function AbsensiSiswa({ session, onNavigateToRekap }: AbsensiSisw
       const success = db.saveAttendanceForClassDate(selectedClassId, selectedDate, newRecords);
 
       if (success) {
+        lastSavedAtRef.current = Date.now();
+        isDirtyRef.current = false;
         setSaveSuccess(true);
         setTimeout(() => {
           setSaveSuccess(false);

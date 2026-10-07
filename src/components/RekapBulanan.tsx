@@ -72,15 +72,20 @@ export default function RekapBulanan({ session, initialClassId, initialMonth, in
     if (typeof initialYear === 'number') setSelectedYear(initialYear);
   }, [initialClassId, initialMonth, initialYear]);
 
-  // Real-time event listener to update whenever attendance is saved
+  // Real-time event listener to update whenever attendance is saved (debounced)
   useEffect(() => {
+    let t: any = null;
     const handleUpdate = () => {
-      setRefreshTrigger((prev) => prev + 1);
+      if (t) clearTimeout(t);
+      t = setTimeout(() => {
+        setRefreshTrigger((prev) => prev + 1);
+      }, 100);
     };
     window.addEventListener('absensi-updated', handleUpdate);
     window.addEventListener('db-synced', handleUpdate);
     window.addEventListener('storage', handleUpdate);
     return () => {
+      if (t) clearTimeout(t);
       window.removeEventListener('absensi-updated', handleUpdate);
       window.removeEventListener('db-synced', handleUpdate);
       window.removeEventListener('storage', handleUpdate);

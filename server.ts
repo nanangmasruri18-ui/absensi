@@ -235,11 +235,13 @@ function broadcastChange(type: string, detail?: any) {
   }
 }
 
-function persistDb() {
+function persistDb(skipBroadcast = false) {
   try {
     databaseCache.updatedAt = new Date().toISOString();
     fs.writeFileSync(DB_FILE, JSON.stringify(databaseCache, null, 2), 'utf-8');
-    broadcastChange('db_updated');
+    if (!skipBroadcast) {
+      broadcastChange('db_updated');
+    }
   } catch (err) {
     console.error('Failed to write database file:', err);
   }
@@ -292,7 +294,8 @@ app.post('/api/db', (req, res) => {
     if (Array.isArray(holidays)) databaseCache.holidays = holidays;
     if (Array.isArray(attendance)) databaseCache.attendance = attendance;
 
-    persistDb();
+    const isInternalSync = req.headers['x-sync-source'] === 'internal-sync';
+    persistDb(isInternalSync);
     res.json({ success: true, updatedAt: databaseCache.updatedAt });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
@@ -315,10 +318,12 @@ app.get('/api/attendance', (req, res) => {
 app.post('/api/attendance', (req, res) => {
   try {
     const body = req.body;
+    const isInternalSync = req.headers['x-sync-source'] === 'internal-sync';
+
     // Can be an array of all attendances or new records
     if (Array.isArray(body)) {
       databaseCache.attendance = body;
-      persistDb();
+      persistDb(isInternalSync);
       return res.json({ success: true, count: body.length });
     }
 
@@ -330,7 +335,7 @@ app.post('/api/attendance', (req, res) => {
         (a) => !(a.classId === classId && a.date === date)
       );
       databaseCache.attendance = [...others, ...records];
-      persistDb();
+      persistDb(isInternalSync);
       return res.json({ success: true, count: records.length });
     }
 

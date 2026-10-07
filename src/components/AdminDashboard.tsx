@@ -129,11 +129,20 @@ export default function AdminDashboard() {
       setSbStatus(getSupabaseStatus());
     });
 
-    window.addEventListener('db-synced', reloadData);
-    window.addEventListener('absensi-updated', reloadData);
+    let t: any = null;
+    const handleDebouncedReload = () => {
+      if (t) clearTimeout(t);
+      t = setTimeout(() => {
+        reloadData();
+      }, 100);
+    };
+
+    window.addEventListener('db-synced', handleDebouncedReload);
+    window.addEventListener('absensi-updated', handleDebouncedReload);
     return () => {
-      window.removeEventListener('db-synced', reloadData);
-      window.removeEventListener('absensi-updated', reloadData);
+      if (t) clearTimeout(t);
+      window.removeEventListener('db-synced', handleDebouncedReload);
+      window.removeEventListener('absensi-updated', handleDebouncedReload);
     };
   }, []);
 

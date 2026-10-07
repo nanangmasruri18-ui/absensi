@@ -259,26 +259,42 @@
     {
       "id": "hol-1",
       "date": "2026-06-01",
-      "name": "Hari Lahir Pancasila",
-      "description": "Libur Nasional memperingati lahirnya Pancasila"
+      "name": "Hari Lahir Pancasila"
     },
     {
       "id": "hol-2",
       "date": "2026-06-17",
-      "name": "Tahun Baru Islam 1448 H",
-      "description": "Peringatan Hijriah baru 1 Muharram"
+      "name": "Tahun Baru Islam 1448 H"
     },
     {
       "id": "hol-3",
       "date": "2026-08-17",
-      "name": "Hari Kemerdekaan RI",
-      "description": "HUT Kemerdekaan Republik Indonesia"
+      "name": "Hari Kemerdekaan RI"
     },
     {
       "id": "hol-4",
       "date": "2026-05-01",
-      "name": "Hari Buruh Internasional",
-      "description": "Libur Hari Buruh sedunia"
+      "name": "Hari Buruh Internasional"
+    },
+    {
+      "id": "hol-5",
+      "date": "2026-10-01",
+      "name": "Hari Kesaktian Pancasila"
+    },
+    {
+      "id": "hol-6",
+      "date": "2026-10-28",
+      "name": "Hari Sumpah Pemuda"
+    },
+    {
+      "id": "hol-7",
+      "date": "2026-11-10",
+      "name": "Hari Pahlawan"
+    },
+    {
+      "id": "hol-8",
+      "date": "2026-12-25",
+      "name": "Hari Raya Natal"
     }
   ],
   "attendance": [
@@ -16159,5 +16175,5 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     }
   ],
-  "updatedAt": "2026-10-07T02:50:27.579Z"
+  "updatedAt": "2026-10-07T03:26:21.136Z"
 }
