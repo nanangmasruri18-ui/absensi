@@ -324,7 +324,7 @@ app.post('/api/attendance', (req, res) => {
     if (Array.isArray(body)) {
       databaseCache.attendance = body;
       persistDb(isInternalSync);
-      return res.json({ success: true, count: body.length });
+      return res.json({ success: true, count: body.length, updatedAt: databaseCache.updatedAt });
     }
 
     // Or { classId, date, records }
@@ -336,7 +336,7 @@ app.post('/api/attendance', (req, res) => {
       );
       databaseCache.attendance = [...others, ...records];
       persistDb(isInternalSync);
-      return res.json({ success: true, count: records.length });
+      return res.json({ success: true, count: records.length, updatedAt: databaseCache.updatedAt });
     }
 
     res.status(400).json({ error: 'Invalid attendance payload' });

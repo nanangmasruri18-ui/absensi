@@ -132,6 +132,7 @@ async function fetchAllAttendanceRows(client: SupabaseClient): Promise<{ data: a
       .from('attendance')
       .select('*')
       .order('date', { ascending: true })
+      .order('id', { ascending: true })
       .range(page * pageSize, (page + 1) * pageSize - 1);
     
     if (error) {
@@ -172,13 +173,23 @@ export async function pushAttendanceRecords(records: Attendance[]): Promise<bool
   if (sample) {
     fetch('/api/attendance', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'x-sync-source': 'internal-sync'
+      },
       body: JSON.stringify({
         classId: sample.classId,
         date: sample.date,
         records,
       }),
-    }).catch(() => {});
+    })
+      .then(async (res) => {
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.updatedAt) lastKnownServerTime = data.updatedAt;
+        }
+      })
+      .catch(() => {});
   }
 
   // 3. Broadcast to all open tabs and components
@@ -218,32 +229,91 @@ export async function fetchAllFromSupabase(force = false): Promise<boolean> {
           supabaseTablesVerified = true;
           supabaseErrorReason = '';
 
-          // Format school
+          // 1. Format & resolve school (Never overwrite newer local edit with older remote)
+          let localSchool: SchoolProfile | null = null;
+          try {
+            const raw = localStorage.getItem(KEYS.SCHOOL);
+            if (raw) localSchool = JSON.parse(raw);
+          } catch {}
+
           if (schoolRes.data && schoolRes.data.length > 0) {
             const row = schoolRes.data[0];
-            const schoolObj: SchoolProfile = {
+            const remoteSchool: SchoolProfile = {
               name: row.name || 'SD Negeri Gelora 01',
               address: row.address || '',
               npsn: row.npsn || '',
               adminName: row.admin_name || '',
+              updatedAt: row.updated_at,
             };
-            localStorage.setItem(KEYS.SCHOOL, JSON.stringify(schoolObj));
+
+            const locTime = localSchool?.updatedAt ? new Date(localSchool.updatedAt).getTime() : 0;
+            const remTime = remoteSchool.updatedAt ? new Date(remoteSchool.updatedAt).getTime() : 0;
+
+            if (localSchool && locTime > remTime) {
+              // Local is newer: keep local and push to Supabase to persist user edit
+              pushToSupabase(KEYS.SCHOOL, localSchool);
+            } else {
+              // Remote is newer or equal
+              const prevRaw = localStorage.getItem(KEYS.SCHOOL);
+              const nextRaw = JSON.stringify(remoteSchool);
+              if (prevRaw !== nextRaw) {
+                localStorage.setItem(KEYS.SCHOOL, nextRaw);
+                window.dispatchEvent(new CustomEvent('db-synced', { detail: { entity: 'school' } }));
+              }
+            }
+          } else if (localSchool) {
+            pushToSupabase(KEYS.SCHOOL, localSchool);
           }
 
-          // Format classes
+          // 2. Format & resolve classes
+          let localClasses: ClassRombel[] = [];
+          try {
+            const raw = localStorage.getItem(KEYS.CLASSES);
+            if (raw) localClasses = JSON.parse(raw);
+          } catch {}
+
           if (classesRes.data && classesRes.data.length > 0) {
-            const classesObj: ClassRombel[] = classesRes.data.map((r: any) => ({
+            const remoteClasses: ClassRombel[] = classesRes.data.map((r: any) => ({
               id: r.id,
               name: r.name,
               grade: r.grade,
               homeroomTeacherId: r.homeroom_teacher_id || '',
+              updatedAt: r.updated_at,
             }));
-            localStorage.setItem(KEYS.CLASSES, JSON.stringify(classesObj));
+
+            const classMap = new Map<string, ClassRombel>();
+            localClasses.forEach((c) => classMap.set(c.id, c));
+            remoteClasses.forEach((rem) => {
+              const loc = classMap.get(rem.id);
+              if (!loc) {
+                classMap.set(rem.id, rem);
+              } else {
+                const locTime = loc.updatedAt ? new Date(loc.updatedAt).getTime() : 0;
+                const remTime = rem.updatedAt ? new Date(rem.updatedAt).getTime() : 0;
+                if (remTime > locTime) classMap.set(rem.id, rem);
+              }
+            });
+
+            const mergedClasses = Array.from(classMap.values()).sort((a, b) => a.id.localeCompare(b.id));
+            const prevRaw = localStorage.getItem(KEYS.CLASSES);
+            const nextRaw = JSON.stringify(mergedClasses);
+            if (prevRaw !== nextRaw) {
+              localStorage.setItem(KEYS.CLASSES, nextRaw);
+              window.dispatchEvent(new CustomEvent('db-synced', { detail: { entity: 'classes' } }));
+            }
+          } else if (localClasses.length > 0) {
+            pushToSupabase(KEYS.CLASSES, localClasses);
           }
 
-          // Format teachers
+          // 3. Format & resolve teachers (Data Akun Guru & Admin)
+          let localTeachers: Teacher[] = [];
+          try {
+            const raw = localStorage.getItem(KEYS.TEACHERS);
+            if (raw) localTeachers = JSON.parse(raw);
+          } catch {}
+
           if (teachersRes.data && teachersRes.data.length > 0) {
-            const teachersObj: Teacher[] = teachersRes.data.map((r: any) => ({
+            const remoteTeachers: Teacher[] = teachersRes.data.map((r: any) => ({
               id: r.id,
               nip: r.nip || '',
               name: r.name,
@@ -252,13 +322,48 @@ export async function fetchAllFromSupabase(force = false): Promise<boolean> {
               passwordHash: r.password_hash,
               assignedClassId: r.assigned_class_id || '',
               role: r.role || 'guru',
+              updatedAt: r.updated_at,
             }));
-            localStorage.setItem(KEYS.TEACHERS, JSON.stringify(teachersObj));
+
+            const teacherMap = new Map<string, Teacher>();
+            // Keep local teachers first
+            localTeachers.forEach((t) => teacherMap.set(t.id, t));
+
+            // Merge with remote
+            remoteTeachers.forEach((rem) => {
+              const loc = teacherMap.get(rem.id);
+              if (!loc) {
+                teacherMap.set(rem.id, rem);
+              } else {
+                const locTime = loc.updatedAt ? new Date(loc.updatedAt).getTime() : 0;
+                const remTime = rem.updatedAt ? new Date(rem.updatedAt).getTime() : 0;
+                // Only take remote if remote is genuinely newer than local edit
+                if (remTime > locTime) {
+                  teacherMap.set(rem.id, rem);
+                }
+              }
+            });
+
+            const mergedTeachers = Array.from(teacherMap.values()).sort((a, b) => a.id.localeCompare(b.id));
+            const prevRaw = localStorage.getItem(KEYS.TEACHERS);
+            const nextRaw = JSON.stringify(mergedTeachers);
+            if (prevRaw !== nextRaw) {
+              localStorage.setItem(KEYS.TEACHERS, nextRaw);
+              window.dispatchEvent(new CustomEvent('db-synced', { detail: { entity: 'teachers' } }));
+            }
+          } else if (localTeachers.length > 0) {
+            pushToSupabase(KEYS.TEACHERS, localTeachers);
           }
 
-          // Format students
+          // 4. Format & resolve students
+          let localStudents: Student[] = [];
+          try {
+            const raw = localStorage.getItem(KEYS.STUDENTS);
+            if (raw) localStudents = JSON.parse(raw);
+          } catch {}
+
           if (studentsRes.data && studentsRes.data.length > 0) {
-            const studentsObj: Student[] = studentsRes.data.map((r: any) => ({
+            const remoteStudents: Student[] = studentsRes.data.map((r: any) => ({
               id: r.id,
               nis: r.nis || '',
               nisn: r.nisn || '',
@@ -267,28 +372,79 @@ export async function fetchAllFromSupabase(force = false): Promise<boolean> {
               birthPlace: r.birth_place || '',
               birthDate: r.birth_date || '',
               classId: r.class_id,
+              updatedAt: r.updated_at,
             }));
-            localStorage.setItem(KEYS.STUDENTS, JSON.stringify(studentsObj));
+
+            const studentMap = new Map<string, Student>();
+            localStudents.forEach((s) => studentMap.set(s.id, s));
+            remoteStudents.forEach((rem) => {
+              const loc = studentMap.get(rem.id);
+              if (!loc) {
+                studentMap.set(rem.id, rem);
+              } else {
+                const locTime = loc.updatedAt ? new Date(loc.updatedAt).getTime() : 0;
+                const remTime = rem.updatedAt ? new Date(rem.updatedAt).getTime() : 0;
+                if (remTime > locTime) studentMap.set(rem.id, rem);
+              }
+            });
+
+            const mergedStudents = Array.from(studentMap.values()).sort((a, b) => a.id.localeCompare(b.id));
+            const prevRaw = localStorage.getItem(KEYS.STUDENTS);
+            const nextRaw = JSON.stringify(mergedStudents);
+            if (prevRaw !== nextRaw) {
+              localStorage.setItem(KEYS.STUDENTS, nextRaw);
+              window.dispatchEvent(new CustomEvent('db-synced', { detail: { entity: 'students' } }));
+            }
+          } else if (localStudents.length > 0) {
+            pushToSupabase(KEYS.STUDENTS, localStudents);
           }
 
-          // Format holidays
+          // 5. Format & resolve holidays
+          let localHolidays: Holiday[] = [];
+          try {
+            const raw = localStorage.getItem(KEYS.HOLIDAYS);
+            if (raw) localHolidays = JSON.parse(raw);
+          } catch {}
+
           if (holidaysRes.data && holidaysRes.data.length > 0) {
-            const holidaysObj: Holiday[] = holidaysRes.data.map((r: any) => ({
+            const remoteHolidays: Holiday[] = holidaysRes.data.map((r: any) => ({
               id: r.id,
               date: r.date,
               name: r.name,
+              updatedAt: r.updated_at,
             }));
-            localStorage.setItem(KEYS.HOLIDAYS, JSON.stringify(holidaysObj));
+
+            const holidayMap = new Map<string, Holiday>();
+            localHolidays.forEach((h) => holidayMap.set(h.id, h));
+            remoteHolidays.forEach((rem) => {
+              const loc = holidayMap.get(rem.id);
+              if (!loc) holidayMap.set(rem.id, rem);
+              else {
+                const locTime = loc.updatedAt ? new Date(loc.updatedAt).getTime() : 0;
+                const remTime = rem.updatedAt ? new Date(rem.updatedAt).getTime() : 0;
+                if (remTime > locTime) holidayMap.set(rem.id, rem);
+              }
+            });
+
+            const mergedHolidays = Array.from(holidayMap.values()).sort((a, b) => a.date.localeCompare(b.date));
+            const prevRaw = localStorage.getItem(KEYS.HOLIDAYS);
+            const nextRaw = JSON.stringify(mergedHolidays);
+            if (prevRaw !== nextRaw) {
+              localStorage.setItem(KEYS.HOLIDAYS, nextRaw);
+              window.dispatchEvent(new CustomEvent('db-synced', { detail: { entity: 'holidays' } }));
+            }
+          } else if (localHolidays.length > 0) {
+            pushToSupabase(KEYS.HOLIDAYS, localHolidays);
           }
 
-          // Also sync retrieved Supabase models to local backend /api/db (marked as internal-sync)
+          // Also sync models to local backend /api/db (marked as internal-sync)
           try {
             const serverDbPayload: Record<string, any> = {};
-            if (schoolRes.data && schoolRes.data.length > 0) serverDbPayload.school = JSON.parse(localStorage.getItem(KEYS.SCHOOL) || '{}');
-            if (classesRes.data && classesRes.data.length > 0) serverDbPayload.classes = JSON.parse(localStorage.getItem(KEYS.CLASSES) || '[]');
-            if (teachersRes.data && teachersRes.data.length > 0) serverDbPayload.teachers = JSON.parse(localStorage.getItem(KEYS.TEACHERS) || '[]');
-            if (studentsRes.data && studentsRes.data.length > 0) serverDbPayload.students = JSON.parse(localStorage.getItem(KEYS.STUDENTS) || '[]');
-            if (holidaysRes.data && holidaysRes.data.length > 0) serverDbPayload.holidays = JSON.parse(localStorage.getItem(KEYS.HOLIDAYS) || '[]');
+            serverDbPayload.school = JSON.parse(localStorage.getItem(KEYS.SCHOOL) || '{}');
+            serverDbPayload.classes = JSON.parse(localStorage.getItem(KEYS.CLASSES) || '[]');
+            serverDbPayload.teachers = JSON.parse(localStorage.getItem(KEYS.TEACHERS) || '[]');
+            serverDbPayload.students = JSON.parse(localStorage.getItem(KEYS.STUDENTS) || '[]');
+            serverDbPayload.holidays = JSON.parse(localStorage.getItem(KEYS.HOLIDAYS) || '[]');
             if (Object.keys(serverDbPayload).length > 0) {
               fetch('/api/db', {
                 method: 'POST',
@@ -297,11 +453,18 @@ export async function fetchAllFromSupabase(force = false): Promise<boolean> {
                   'x-sync-source': 'internal-sync'
                 },
                 body: JSON.stringify(serverDbPayload),
-              }).catch(() => {});
+              })
+                .then(async (res) => {
+                  if (res.ok) {
+                    const data = await res.json();
+                    if (data?.updatedAt) lastKnownServerTime = data.updatedAt;
+                  }
+                })
+                .catch(() => {});
             }
           } catch {}
 
-          // Format attendance
+          // Format & resolve attendance
           if (attendanceRes.data && attendanceRes.data.length > 0) {
             const remoteAttendance: Attendance[] = attendanceRes.data.map((r: any) => ({
               id: r.id,
@@ -323,28 +486,48 @@ export async function fetchAllFromSupabase(force = false): Promise<boolean> {
             // CRITICAL TIMESTAMP-BASED RESOLUTION:
             // Never overwrite newer local edits with older remote data!
             const recordMap = new Map<string, Attendance>();
-            remoteAttendance.forEach((a) => recordMap.set(a.id, a));
-
             localRecords.forEach((local) => {
-              const remote = recordMap.get(local.id);
-              if (!remote) {
-                recordMap.set(local.id, local);
+              if (local && local.id) recordMap.set(local.id, local);
+            });
+
+            remoteAttendance.forEach((remote) => {
+              if (!remote || !remote.id) return;
+              const local = recordMap.get(remote.id);
+              if (!local) {
+                recordMap.set(remote.id, remote);
               } else {
                 const localTime = local.updatedAt ? new Date(local.updatedAt).getTime() : 0;
                 const remoteTime = remote.updatedAt ? new Date(remote.updatedAt).getTime() : 0;
-                // If local edit is more recent, keep local so UI never flips back to old state
-                if (localTime > remoteTime) {
-                  recordMap.set(local.id, local);
+                if (remoteTime > localTime) {
+                  recordMap.set(remote.id, remote);
                 }
               }
             });
 
-            const mergedAttendance = Array.from(recordMap.values());
-            const prevRaw = localStorage.getItem(KEYS.ATTENDANCE);
-            const nextRaw = JSON.stringify(mergedAttendance);
+            // Deterministic sort: date ASC, classId ASC, studentId ASC
+            const mergedAttendance = Array.from(recordMap.values()).sort((a, b) => {
+              if (a.date !== b.date) return a.date.localeCompare(b.date);
+              if (a.classId !== b.classId) return a.classId.localeCompare(b.classId);
+              return (a.studentId || '').localeCompare(b.studentId || '');
+            });
 
-            // Only update and broadcast if attendance data actually changed
-            if (prevRaw !== nextRaw) {
+            // Check if actual data values changed (ignore array order / formatting)
+            let isDataDifferent = false;
+            if (localRecords.length !== mergedAttendance.length) {
+              isDataDifferent = true;
+            } else {
+              for (let i = 0; i < mergedAttendance.length; i++) {
+                const m = mergedAttendance[i];
+                const l = localRecords[i];
+                if (!l || l.id !== m.id || l.status !== m.status || l.notes !== m.notes) {
+                  isDataDifferent = true;
+                  break;
+                }
+              }
+            }
+
+            if (isDataDifferent) {
+              const nextRaw = JSON.stringify(mergedAttendance);
               localStorage.setItem(KEYS.ATTENDANCE, nextRaw);
 
               // Notify UI smoothly
@@ -358,7 +541,14 @@ export async function fetchAllFromSupabase(force = false): Promise<boolean> {
                   'x-sync-source': 'internal-sync'
                 },
                 body: nextRaw,
-              }).catch(() => {});
+              })
+                .then(async (res) => {
+                  if (res.ok) {
+                    const data = await res.json();
+                    if (data?.updatedAt) lastKnownServerTime = data.updatedAt;
+                  }
+                })
+                .catch(() => {});
             }
 
             updateSyncState({
@@ -505,6 +695,7 @@ export async function pushToSupabase(key: string, value: any): Promise<boolean> 
             name: c.name,
             grade: c.grade,
             homeroom_teacher_id: c.homeroomTeacherId || '',
+            updated_at: c.updatedAt || new Date().toISOString(),
           }));
           await supabase.from('classes').upsert(rows, { onConflict: 'id' });
         } else if (key === KEYS.TEACHERS && Array.isArray(value)) {
@@ -517,8 +708,15 @@ export async function pushToSupabase(key: string, value: any): Promise<boolean> 
             password_hash: t.passwordHash,
             assigned_class_id: t.assignedClassId || '',
             role: t.role || 'guru',
+            updated_at: t.updatedAt || new Date().toISOString(),
           }));
           await supabase.from('teachers').upsert(rows, { onConflict: 'id' });
+
+          // Also remove any teacher deleted from local from Supabase
+          const activeIds = rows.map((r) => r.id);
+          if (activeIds.length > 0) {
+            await supabase.from('teachers').delete().not('id', 'in', `(${activeIds.join(',')})`);
+          }
         } else if (key === KEYS.SCHOOL && value) {
           await supabase.from('school').upsert({
             id: 'school-1',
@@ -526,12 +724,14 @@ export async function pushToSupabase(key: string, value: any): Promise<boolean> 
             address: value.address || '',
             npsn: value.npsn || '',
             admin_name: value.adminName || '',
-          });
+            updated_at: value.updatedAt || new Date().toISOString(),
+          }, { onConflict: 'id' });
         } else if (key === KEYS.HOLIDAYS && Array.isArray(value)) {
           const rows = value.map((h: Holiday) => ({
             id: h.id,
             date: h.date,
             name: h.name,
+            updated_at: h.updatedAt || new Date().toISOString(),
           }));
           await supabase.from('holidays').upsert(rows, { onConflict: 'id' });
         }
@@ -551,17 +751,37 @@ export async function pushToSupabase(key: string, value: any): Promise<boolean> 
       payload.attendance = value;
       fetch('/api/attendance', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-sync-source': 'internal-sync'
+        },
         body: JSON.stringify(value),
-      }).catch(() => {});
+      })
+        .then(async (res) => {
+          if (res.ok) {
+            const data = await res.json();
+            if (data?.updatedAt) lastKnownServerTime = data.updatedAt;
+          }
+        })
+        .catch(() => {});
     }
 
     if (Object.keys(payload).length > 0) {
       fetch('/api/db', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-sync-source': 'internal-sync'
+        },
         body: JSON.stringify(payload),
-      }).catch(() => {});
+      })
+        .then(async (res) => {
+          if (res.ok) {
+            const data = await res.json();
+            if (data?.updatedAt) lastKnownServerTime = data.updatedAt;
+          }
+        })
+        .catch(() => {});
     }
 
     updateSyncState({
@@ -636,6 +856,26 @@ export function initRealtimeSync(): () => void {
             sbDebounceTimer = setTimeout(() => {
               fetchAllFromSupabase(true);
             }, 1200);
+          }
+        )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'school' },
+          () => {
+            if (sbDebounceTimer) clearTimeout(sbDebounceTimer);
+            sbDebounceTimer = setTimeout(() => {
+              fetchAllFromSupabase(true);
+            }, 800);
+          }
+        )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'teachers' },
+          () => {
+            if (sbDebounceTimer) clearTimeout(sbDebounceTimer);
+            sbDebounceTimer = setTimeout(() => {
+              fetchAllFromSupabase(true);
+            }, 800);
           }
         )
         .subscribe();

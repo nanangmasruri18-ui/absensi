@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { db, encryptPassword, decryptPassword } from '../utils/db';
 import { UserSession, SchoolProfile, Teacher, Gender } from '../types';
 import { 
@@ -39,6 +39,23 @@ export default function PengaturanAkun({ session, onProfileUpdated }: Pengaturan
   const [teacherName, setTeacherName] = useState(currentTeacher?.name || '');
   const [teacherNip, setTeacherNip] = useState(currentTeacher?.nip || '');
   const [teacherGender, setTeacherGender] = useState<Gender>(currentTeacher?.gender || 'L');
+
+  // Keep synced with background database updates
+  useEffect(() => {
+    const handleSync = () => {
+      const latestSchool = db.getSchool();
+      const latestTeachers = db.getTeachers();
+      setSchool(latestSchool);
+      setTeachers(latestTeachers);
+    };
+
+    window.addEventListener('db-synced', handleSync);
+    window.addEventListener('storage', handleSync);
+    return () => {
+      window.removeEventListener('db-synced', handleSync);
+      window.removeEventListener('storage', handleSync);
+    };
+  }, []);
 
   // Change password forms states
   const [oldPassword, setOldPassword] = useState('');

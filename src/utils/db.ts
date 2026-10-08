@@ -231,8 +231,15 @@ class LocalDB {
   }
 
   saveSchool(school: SchoolProfile) {
-    localStorage.setItem(KEYS.SCHOOL, JSON.stringify(school));
-    pushToSupabase(KEYS.SCHOOL, school);
+    const stampedSchool: SchoolProfile = {
+      ...school,
+      updatedAt: school.updatedAt || new Date().toISOString(),
+    };
+    localStorage.setItem(KEYS.SCHOOL, JSON.stringify(stampedSchool));
+    pushToSupabase(KEYS.SCHOOL, stampedSchool);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('db-synced', { detail: { entity: 'school' } }));
+    }
   }
 
   // CLASSES
@@ -241,8 +248,16 @@ class LocalDB {
   }
 
   saveClasses(classes: ClassRombel[]) {
-    localStorage.setItem(KEYS.CLASSES, JSON.stringify(classes));
-    pushToSupabase(KEYS.CLASSES, classes);
+    const nowIso = new Date().toISOString();
+    const stamped = classes.map((c) => ({
+      ...c,
+      updatedAt: c.updatedAt || nowIso,
+    }));
+    localStorage.setItem(KEYS.CLASSES, JSON.stringify(stamped));
+    pushToSupabase(KEYS.CLASSES, stamped);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('db-synced', { detail: { entity: 'classes' } }));
+    }
   }
 
   // TEACHERS
@@ -251,8 +266,16 @@ class LocalDB {
   }
 
   saveTeachers(teachers: Teacher[]) {
-    localStorage.setItem(KEYS.TEACHERS, JSON.stringify(teachers));
-    pushToSupabase(KEYS.TEACHERS, teachers);
+    const nowIso = new Date().toISOString();
+    const stamped = teachers.map((t) => ({
+      ...t,
+      updatedAt: t.updatedAt || nowIso,
+    }));
+    localStorage.setItem(KEYS.TEACHERS, JSON.stringify(stamped));
+    pushToSupabase(KEYS.TEACHERS, stamped);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('db-synced', { detail: { entity: 'teachers' } }));
+    }
   }
 
   // STUDENTS
@@ -261,8 +284,16 @@ class LocalDB {
   }
 
   saveStudents(students: Student[]) {
-    localStorage.setItem(KEYS.STUDENTS, JSON.stringify(students));
-    pushToSupabase(KEYS.STUDENTS, students);
+    const nowIso = new Date().toISOString();
+    const stamped = students.map((s) => ({
+      ...s,
+      updatedAt: s.updatedAt || nowIso,
+    }));
+    localStorage.setItem(KEYS.STUDENTS, JSON.stringify(stamped));
+    pushToSupabase(KEYS.STUDENTS, stamped);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('db-synced', { detail: { entity: 'students' } }));
+    }
   }
 
   // HOLIDAYS
@@ -271,8 +302,16 @@ class LocalDB {
   }
 
   saveHolidays(holidays: Holiday[]) {
-    localStorage.setItem(KEYS.HOLIDAYS, JSON.stringify(holidays));
-    pushToSupabase(KEYS.HOLIDAYS, holidays);
+    const nowIso = new Date().toISOString();
+    const stamped = holidays.map((h) => ({
+      ...h,
+      updatedAt: h.updatedAt || nowIso,
+    }));
+    localStorage.setItem(KEYS.HOLIDAYS, JSON.stringify(stamped));
+    pushToSupabase(KEYS.HOLIDAYS, stamped);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('db-synced', { detail: { entity: 'holidays' } }));
+    }
   }
 
   // ATTENDANCE
@@ -289,10 +328,15 @@ class LocalDB {
 
   saveAttendance(attendances: Attendance[]) {
     try {
-      localStorage.setItem(KEYS.ATTENDANCE, JSON.stringify(attendances));
-      pushToSupabase(KEYS.ATTENDANCE, attendances);
+      const nowIso = new Date().toISOString();
+      const stamped = attendances.map((a) => ({
+        ...a,
+        updatedAt: a.updatedAt || nowIso,
+      }));
+      localStorage.setItem(KEYS.ATTENDANCE, JSON.stringify(stamped));
+      pushToSupabase(KEYS.ATTENDANCE, stamped);
       if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('absensi-updated', { detail: { count: attendances.length } }));
+        window.dispatchEvent(new CustomEvent('absensi-updated', { detail: { count: stamped.length } }));
       }
     } catch (err) {
       console.error('Error saving attendance:', err);
@@ -301,15 +345,25 @@ class LocalDB {
 
   saveAttendanceForClassDate(classId: string, date: string, records: Attendance[]) {
     try {
+      const nowIso = new Date().toISOString();
+      const stampedRecords = records.map((r) => ({
+        ...r,
+        updatedAt: r.updatedAt || nowIso,
+      }));
+
       const all = this.getAttendance();
       const filtered = all.filter((a) => !(a.classId === classId && a.date === date));
-      const updated = [...filtered, ...records];
+      const updated = [...filtered, ...stampedRecords].sort((a, b) => {
+        if (a.date !== b.date) return a.date.localeCompare(b.date);
+        if (a.classId !== b.classId) return a.classId.localeCompare(b.classId);
+        return (a.studentId || '').localeCompare(b.studentId || '');
+      });
       
       // Update local storage
       localStorage.setItem(KEYS.ATTENDANCE, JSON.stringify(updated));
 
       // Fast direct push of specific updated records to Supabase & backend
-      pushAttendanceRecords(records);
+      pushAttendanceRecords(stampedRecords);
 
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('absensi-updated', { detail: { count: updated.length } }));

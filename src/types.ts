@@ -7,6 +7,7 @@ export interface SchoolProfile {
   address: string;
   npsn: string;
   adminName: string;
+  updatedAt?: string;
 }
 
 export interface ClassRombel {
@@ -14,6 +15,7 @@ export interface ClassRombel {
   name: string; // e.g. Kelas 1A
   grade: string; // e.g. "1" or "Kelas 1"
   homeroomTeacherId: string; // ID of the Wali Kelas
+  updatedAt?: string;
 }
 
 export interface Teacher {
@@ -25,6 +27,7 @@ export interface Teacher {
   passwordHash: string; // simple encrypted/hashed format for security
   assignedClassId: string; // Class ID they teach (one teacher teaches one class in SD)
   role: 'admin' | 'guru';
+  updatedAt?: string;
 }
 
 export interface Student {
@@ -36,6 +39,7 @@ export interface Student {
   birthPlace: string;
   birthDate: string; // YYYY-MM-DD
   classId: string; // Class ID
+  updatedAt?: string;
 }
 
 export interface Holiday {
@@ -43,6 +47,7 @@ export interface Holiday {
   date: string; // YYYY-MM-DD
   name: string;
   description?: string;
+  updatedAt?: string;
 }
 
 export interface Attendance {

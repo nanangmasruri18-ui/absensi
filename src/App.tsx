@@ -36,6 +36,9 @@ export default function App() {
   // Real-time clock state
   const [currentTime, setCurrentTime] = useState(new Date());
 
+  // School profile state
+  const [school, setSchool] = useState(() => db.getSchool());
+
   // Database Sync States
   const [syncState, setSyncState] = useState<SyncState>({ status: 'synced' });
   
@@ -52,9 +55,17 @@ export default function App() {
       setSyncState(state);
     });
 
+    const handleSync = () => {
+      setSchool(db.getSchool());
+    };
+    window.addEventListener('db-synced', handleSync);
+    window.addEventListener('storage', handleSync);
+
     return () => {
       cleanupRealtime();
       unsubscribe();
+      window.removeEventListener('db-synced', handleSync);
+      window.removeEventListener('storage', handleSync);
     };
   }, []);
 
@@ -202,8 +213,6 @@ export default function App() {
       </div>
     );
   }
-
-  const school = db.getSchool();
 
   return (
     <div className="min-h-screen bg-slate-50 flex overflow-hidden font-sans antialiased text-slate-800">

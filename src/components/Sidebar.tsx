@@ -1,5 +1,5 @@
-import React from 'react';
-import { UserSession } from '../types';
+import React, { useState, useEffect } from 'react';
+import { UserSession, SchoolProfile } from '../types';
 import { db } from '../utils/db';
 import { 
   BarChart3, 
@@ -34,8 +34,18 @@ export default function Sidebar({
   isMobileOpen,
   setIsMobileOpen,
 }: SidebarProps) {
-  const school = db.getSchool();
+  const [school, setSchool] = useState<SchoolProfile>(() => db.getSchool());
   const isAdmin = session.role === 'admin';
+
+  useEffect(() => {
+    const handleSync = () => setSchool(db.getSchool());
+    window.addEventListener('db-synced', handleSync);
+    window.addEventListener('storage', handleSync);
+    return () => {
+      window.removeEventListener('db-synced', handleSync);
+      window.removeEventListener('storage', handleSync);
+    };
+  }, []);
 
   // Navigation Links based on role
   const menuItems = isAdmin
