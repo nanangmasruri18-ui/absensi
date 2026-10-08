@@ -95,7 +95,9 @@ export default function PengaturanAkun({ session, onProfileUpdated }: Pengaturan
       setSchool(updatedSchool);
 
       // Also update the 'admin' teacher's name dynamically in the teacher table
-      const updatedTeachersList = teachers.map((t) =>
+      const currentAll = db.getTeachers();
+      const baseTeachers = currentAll.length >= teachers.length ? currentAll : teachers;
+      const updatedTeachersList = baseTeachers.map((t) =>
         t.role === 'admin' ? { ...t, name: adminName.trim() } : t
       );
       db.saveTeachers(updatedTeachersList);
@@ -115,7 +117,9 @@ export default function PengaturanAkun({ session, onProfileUpdated }: Pengaturan
         return;
       }
 
-      const updatedTeachersList = teachers.map((t) =>
+      const currentAll = db.getTeachers();
+      const baseTeachers = currentAll.length >= teachers.length ? currentAll : teachers;
+      const updatedTeachersList = baseTeachers.map((t) =>
         t.id === session.userId
           ? { ...t, name: teacherName.trim(), nip: teacherNip.trim(), gender: teacherGender }
           : t
@@ -165,7 +169,9 @@ export default function PengaturanAkun({ session, onProfileUpdated }: Pengaturan
 
     // Encrypt and save back
     const encryptedNew = encryptPassword(newPassword);
-    const updatedTeachersList = teachers.map((t) =>
+    const currentAll = db.getTeachers();
+    const baseTeachers = currentAll.length >= teachers.length ? currentAll : teachers;
+    const updatedTeachersList = baseTeachers.map((t) =>
       t.id === session.userId ? { ...t, passwordHash: encryptedNew } : t
     );
 

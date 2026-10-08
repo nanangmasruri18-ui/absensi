@@ -94,9 +94,8 @@ export default function HariLibur() {
 
   const confirmDelete = () => {
     if (!deleteTargetId) return;
-    const updatedList = holidays.filter((h) => h.id !== deleteTargetId);
-    db.saveHolidays(updatedList);
-    setHolidays(updatedList);
+    db.deleteHoliday(deleteTargetId);
+    setHolidays(db.getHolidays());
     setDeleteTargetId(null);
   };
 

@@ -153,9 +153,8 @@ export default function DataSiswa() {
     if (!deleteTargetId) return;
     const id = deleteTargetId;
 
-    const updatedList = students.filter((s) => s.id !== id);
-    db.saveStudents(updatedList);
-    setStudents(updatedList);
+    db.deleteStudent(id);
+    setStudents(db.getStudents());
 
     // Clean associated attendances
     const attendances = db.getAttendance().filter((a) => a.studentId !== id);

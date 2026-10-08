@@ -25,10 +25,11 @@ if (!fs.existsSync(DATA_DIR)) {
 const encryptPassword = (pwd: string) => Buffer.from(pwd).toString('base64');
 
 const DEFAULT_SCHOOL = {
-  name: 'SD Negeri Gelora 01',
-  address: 'Jl. Pemuda No. 45, Kel. Gelora, Kec. Tanah Abang, Kota Jakarta Pusat, DKI Jakarta',
-  npsn: '20103456',
+  name: 'SDN 005 Gelora',
+  address: 'Jl. Kayangan, No. 348/C Gelora',
+  npsn: '10405436',
   adminName: 'Admin Gelora',
+  updatedAt: '2020-01-01T00:00:00.000Z',
 };
 
 const DEFAULT_CLASSES = [
@@ -345,6 +346,29 @@ app.post('/api/attendance', (req, res) => {
   }
 });
 
+// Delete individual entity item endpoint
+app.delete('/api/db/item/:table/:id', (req, res) => {
+  const { table, id } = req.params;
+  try {
+    if (table === 'teachers' && Array.isArray(databaseCache.teachers)) {
+      databaseCache.teachers = databaseCache.teachers.filter((t) => t.id !== id);
+    } else if (table === 'students' && Array.isArray(databaseCache.students)) {
+      databaseCache.students = databaseCache.students.filter((s) => s.id !== id);
+    } else if (table === 'classes' && Array.isArray(databaseCache.classes)) {
+      databaseCache.classes = databaseCache.classes.filter((c) => c.id !== id);
+    } else if (table === 'holidays' && Array.isArray(databaseCache.holidays)) {
+      databaseCache.holidays = databaseCache.holidays.filter((h) => h.id !== id);
+    } else if (table === 'attendance' && Array.isArray(databaseCache.attendance)) {
+      databaseCache.attendance = databaseCache.attendance.filter((a) => a.id !== id);
+    }
+    const isInternalSync = req.headers['x-sync-source'] === 'internal-sync';
+    persistDb(isInternalSync);
+    res.json({ success: true, table, id });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Reset database endpoint
 app.post('/api/db/reset', (req, res) => {
   databaseCache = {
@@ -362,6 +386,80 @@ app.post('/api/db/reset', (req, res) => {
 
 // Setup Vite or static serving
 async function startServer() {
+  // Sync memory cache from Supabase on startup if configured
+  try {
+    const sbUrl = (process.env.VITE_SUPABASE_URL || '').replace(/\/rest\/v1\/?$/, '').replace(/\/$/, '');
+    const sbKey = (process.env.VITE_SUPABASE_ANON_KEY || '').trim();
+    if (sbUrl && sbKey) {
+      const { createClient } = await import('@supabase/supabase-js');
+      const sbClient = createClient(sbUrl, sbKey);
+      const [sRes, cRes, tRes, stRes, hRes] = await Promise.all([
+        sbClient.from('school').select('*').limit(1),
+        sbClient.from('classes').select('*'),
+        sbClient.from('teachers').select('*'),
+        sbClient.from('students').select('*'),
+        sbClient.from('holidays').select('*'),
+      ]);
+      if (sRes.data && sRes.data[0]) {
+        const row = sRes.data[0];
+        databaseCache.school = {
+          name: row.name,
+          address: row.address || '',
+          npsn: row.npsn || '',
+          adminName: row.admin_name || '',
+          updatedAt: row.updated_at,
+        };
+      }
+      if (cRes.data && cRes.data.length > 0) {
+        databaseCache.classes = cRes.data.map((c: any) => ({
+          id: c.id,
+          name: c.name,
+          grade: c.grade,
+          homeroomTeacherId: c.homeroom_teacher_id || '',
+          updatedAt: c.updated_at,
+        }));
+      }
+      if (tRes.data && tRes.data.length > 0) {
+        databaseCache.teachers = tRes.data.map((t: any) => ({
+          id: t.id,
+          nip: t.nip || '',
+          name: t.name,
+          gender: t.gender || 'L',
+          username: t.username,
+          passwordHash: t.password_hash,
+          assignedClassId: t.assigned_class_id || '',
+          role: t.role || 'guru',
+          updatedAt: t.updated_at,
+        }));
+      }
+      if (stRes.data && stRes.data.length > 0) {
+        databaseCache.students = stRes.data.map((s: any) => ({
+          id: s.id,
+          nis: s.nis || '',
+          nisn: s.nisn || '',
+          name: s.name,
+          gender: s.gender || 'L',
+          birthPlace: s.birth_place || '',
+          birthDate: s.birth_date || '',
+          classId: s.class_id,
+          updatedAt: s.updated_at,
+        }));
+      }
+      if (hRes.data && hRes.data.length > 0) {
+        databaseCache.holidays = hRes.data.map((h: any) => ({
+          id: h.id,
+          date: h.date,
+          name: h.name,
+          description: h.description || '',
+          updatedAt: h.updated_at,
+        }));
+      }
+      persistDb(true);
+      console.log('Server memory cache successfully initialized from Supabase cloud!');
+    }
+  } catch (err) {
+    console.warn('Notice: Server Supabase initialization fallback to local file:', err);
+  }
   const distPath = path.resolve(__dirname, 'dist');
   const hasDist = fs.existsSync(path.join(distPath, 'index.html'));
 

@@ -151,10 +151,9 @@ export default function DataKelas() {
     );
     db.saveStudents(updatedStudents);
 
-    // Now filter out classes
-    const updatedClassesList = classes.filter((c) => c.id !== id);
-    db.saveClasses(updatedClassesList);
-    setClasses(updatedClassesList);
+    // Now delete class
+    db.deleteClass(id);
+    setClasses(db.getClasses());
     setTeachers(db.getTeachers().filter((t) => t.role === 'guru')); // refresh teachers
 
     setDeleteTargetId(null);

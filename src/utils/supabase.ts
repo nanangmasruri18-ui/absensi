@@ -97,6 +97,62 @@ export const KEYS = {
   ATTENDANCE: 'absensi_sd_attendance',
 };
 
+// Guard against race conditions: if user saved within last 6 seconds, do not let remote fetch overwrite it
+const recentSaves = new Map<string, number>();
+
+export function recordRecentSave(key: string) {
+  recentSaves.set(key, Date.now());
+}
+
+export function isRecentlySaved(key: string, maxAgeMs = 6000): boolean {
+  const t = recentSaves.get(key);
+  if (!t) return false;
+  return Date.now() - t < maxAgeMs;
+}
+
+const TOMBSTONES_KEY = 'absensi_deleted_ids';
+
+export function recordDeletedId(id: string) {
+  try {
+    const raw = localStorage.getItem(TOMBSTONES_KEY) || '[]';
+    const list: string[] = JSON.parse(raw);
+    if (!list.includes(id)) {
+      list.push(id);
+      localStorage.setItem(TOMBSTONES_KEY, JSON.stringify(list));
+    }
+  } catch {}
+}
+
+export function isDeletedId(id: string): boolean {
+  try {
+    const raw = localStorage.getItem(TOMBSTONES_KEY) || '[]';
+    const list: string[] = JSON.parse(raw);
+    return list.includes(id);
+  } catch {
+    return false;
+  }
+}
+
+export async function deleteFromSupabase(
+  table: 'school' | 'classes' | 'teachers' | 'students' | 'holidays' | 'attendance',
+  id: string
+): Promise<boolean> {
+  recordDeletedId(id);
+  try {
+    if (supabase) {
+      await supabase.from(table).delete().eq('id', id);
+    }
+    fetch(`/api/db/item/${table}/${id}`, {
+      method: 'DELETE',
+      headers: { 'x-sync-source': 'internal-sync' },
+    }).catch(() => {});
+    return true;
+  } catch (e) {
+    console.warn(`Error deleting ${id} from ${table}:`, e);
+    return false;
+  }
+}
+
 // 3. Test if Supabase tables exist
 export async function checkSupabaseTables(): Promise<boolean> {
   if (!supabase) {
@@ -239,7 +295,7 @@ export async function fetchAllFromSupabase(force = false): Promise<boolean> {
           if (schoolRes.data && schoolRes.data.length > 0) {
             const row = schoolRes.data[0];
             const remoteSchool: SchoolProfile = {
-              name: row.name || 'SD Negeri Gelora 01',
+              name: row.name || 'SDN 005 Gelora',
               address: row.address || '',
               npsn: row.npsn || '',
               adminName: row.admin_name || '',
@@ -249,8 +305,10 @@ export async function fetchAllFromSupabase(force = false): Promise<boolean> {
             const locTime = localSchool?.updatedAt ? new Date(localSchool.updatedAt).getTime() : 0;
             const remTime = remoteSchool.updatedAt ? new Date(remoteSchool.updatedAt).getTime() : 0;
 
-            if (localSchool && locTime > remTime) {
-              // Local is newer: keep local and push to Supabase to persist user edit
+            if (isRecentlySaved(KEYS.SCHOOL)) {
+              if (localSchool) pushToSupabase(KEYS.SCHOOL, localSchool);
+            } else if (localSchool && locTime > remTime) {
+              // Local is strictly newer: push to Supabase to persist user edit
               pushToSupabase(KEYS.SCHOOL, localSchool);
             } else {
               // Remote is newer or equal
@@ -281,25 +339,34 @@ export async function fetchAllFromSupabase(force = false): Promise<boolean> {
               updatedAt: r.updated_at,
             }));
 
-            const classMap = new Map<string, ClassRombel>();
-            localClasses.forEach((c) => classMap.set(c.id, c));
-            remoteClasses.forEach((rem) => {
-              const loc = classMap.get(rem.id);
-              if (!loc) {
-                classMap.set(rem.id, rem);
-              } else {
-                const locTime = loc.updatedAt ? new Date(loc.updatedAt).getTime() : 0;
-                const remTime = rem.updatedAt ? new Date(rem.updatedAt).getTime() : 0;
-                if (remTime > locTime) classMap.set(rem.id, rem);
-              }
-            });
+            if (isRecentlySaved(KEYS.CLASSES)) {
+              if (localClasses.length > 0) pushToSupabase(KEYS.CLASSES, localClasses);
+            } else {
+              const classMap = new Map<string, ClassRombel>();
+              localClasses.forEach((c) => {
+                if (!isDeletedId(c.id)) classMap.set(c.id, c);
+              });
+              remoteClasses.forEach((rem) => {
+                if (isDeletedId(rem.id)) return;
+                const loc = classMap.get(rem.id);
+                if (!loc) {
+                  classMap.set(rem.id, rem);
+                } else {
+                  const locTime = loc.updatedAt ? new Date(loc.updatedAt).getTime() : 0;
+                  const remTime = rem.updatedAt ? new Date(rem.updatedAt).getTime() : 0;
+                  if (remTime > locTime) classMap.set(rem.id, rem);
+                }
+              });
 
-            const mergedClasses = Array.from(classMap.values()).sort((a, b) => a.id.localeCompare(b.id));
-            const prevRaw = localStorage.getItem(KEYS.CLASSES);
-            const nextRaw = JSON.stringify(mergedClasses);
-            if (prevRaw !== nextRaw) {
-              localStorage.setItem(KEYS.CLASSES, nextRaw);
-              window.dispatchEvent(new CustomEvent('db-synced', { detail: { entity: 'classes' } }));
+              const mergedClasses = Array.from(classMap.values())
+                .filter((c) => !isDeletedId(c.id))
+                .sort((a, b) => a.id.localeCompare(b.id));
+              const prevRaw = localStorage.getItem(KEYS.CLASSES);
+              const nextRaw = JSON.stringify(mergedClasses);
+              if (prevRaw !== nextRaw) {
+                localStorage.setItem(KEYS.CLASSES, nextRaw);
+                window.dispatchEvent(new CustomEvent('db-synced', { detail: { entity: 'classes' } }));
+              }
             }
           } else if (localClasses.length > 0) {
             pushToSupabase(KEYS.CLASSES, localClasses);
@@ -325,31 +392,37 @@ export async function fetchAllFromSupabase(force = false): Promise<boolean> {
               updatedAt: r.updated_at,
             }));
 
-            const teacherMap = new Map<string, Teacher>();
-            // Keep local teachers first
-            localTeachers.forEach((t) => teacherMap.set(t.id, t));
+            if (isRecentlySaved(KEYS.TEACHERS)) {
+              if (localTeachers.length > 0) pushToSupabase(KEYS.TEACHERS, localTeachers);
+            } else {
+              const teacherMap = new Map<string, Teacher>();
+              localTeachers.forEach((t) => {
+                if (!isDeletedId(t.id)) teacherMap.set(t.id, t);
+              });
 
-            // Merge with remote
-            remoteTeachers.forEach((rem) => {
-              const loc = teacherMap.get(rem.id);
-              if (!loc) {
-                teacherMap.set(rem.id, rem);
-              } else {
-                const locTime = loc.updatedAt ? new Date(loc.updatedAt).getTime() : 0;
-                const remTime = rem.updatedAt ? new Date(rem.updatedAt).getTime() : 0;
-                // Only take remote if remote is genuinely newer than local edit
-                if (remTime > locTime) {
+              remoteTeachers.forEach((rem) => {
+                if (isDeletedId(rem.id)) return;
+                const loc = teacherMap.get(rem.id);
+                if (!loc) {
                   teacherMap.set(rem.id, rem);
+                } else {
+                  const locTime = loc.updatedAt ? new Date(loc.updatedAt).getTime() : 0;
+                  const remTime = rem.updatedAt ? new Date(rem.updatedAt).getTime() : 0;
+                  if (remTime > locTime) {
+                    teacherMap.set(rem.id, rem);
+                  }
                 }
-              }
-            });
+              });
 
-            const mergedTeachers = Array.from(teacherMap.values()).sort((a, b) => a.id.localeCompare(b.id));
-            const prevRaw = localStorage.getItem(KEYS.TEACHERS);
-            const nextRaw = JSON.stringify(mergedTeachers);
-            if (prevRaw !== nextRaw) {
-              localStorage.setItem(KEYS.TEACHERS, nextRaw);
-              window.dispatchEvent(new CustomEvent('db-synced', { detail: { entity: 'teachers' } }));
+              const mergedTeachers = Array.from(teacherMap.values())
+                .filter((t) => !isDeletedId(t.id))
+                .sort((a, b) => a.id.localeCompare(b.id));
+              const prevRaw = localStorage.getItem(KEYS.TEACHERS);
+              const nextRaw = JSON.stringify(mergedTeachers);
+              if (prevRaw !== nextRaw) {
+                localStorage.setItem(KEYS.TEACHERS, nextRaw);
+                window.dispatchEvent(new CustomEvent('db-synced', { detail: { entity: 'teachers' } }));
+              }
             }
           } else if (localTeachers.length > 0) {
             pushToSupabase(KEYS.TEACHERS, localTeachers);
@@ -375,25 +448,34 @@ export async function fetchAllFromSupabase(force = false): Promise<boolean> {
               updatedAt: r.updated_at,
             }));
 
-            const studentMap = new Map<string, Student>();
-            localStudents.forEach((s) => studentMap.set(s.id, s));
-            remoteStudents.forEach((rem) => {
-              const loc = studentMap.get(rem.id);
-              if (!loc) {
-                studentMap.set(rem.id, rem);
-              } else {
-                const locTime = loc.updatedAt ? new Date(loc.updatedAt).getTime() : 0;
-                const remTime = rem.updatedAt ? new Date(rem.updatedAt).getTime() : 0;
-                if (remTime > locTime) studentMap.set(rem.id, rem);
-              }
-            });
+            if (isRecentlySaved(KEYS.STUDENTS)) {
+              if (localStudents.length > 0) pushToSupabase(KEYS.STUDENTS, localStudents);
+            } else {
+              const studentMap = new Map<string, Student>();
+              localStudents.forEach((s) => {
+                if (!isDeletedId(s.id)) studentMap.set(s.id, s);
+              });
+              remoteStudents.forEach((rem) => {
+                if (isDeletedId(rem.id)) return;
+                const loc = studentMap.get(rem.id);
+                if (!loc) {
+                  studentMap.set(rem.id, rem);
+                } else {
+                  const locTime = loc.updatedAt ? new Date(loc.updatedAt).getTime() : 0;
+                  const remTime = rem.updatedAt ? new Date(rem.updatedAt).getTime() : 0;
+                  if (remTime > locTime) studentMap.set(rem.id, rem);
+                }
+              });
 
-            const mergedStudents = Array.from(studentMap.values()).sort((a, b) => a.id.localeCompare(b.id));
-            const prevRaw = localStorage.getItem(KEYS.STUDENTS);
-            const nextRaw = JSON.stringify(mergedStudents);
-            if (prevRaw !== nextRaw) {
-              localStorage.setItem(KEYS.STUDENTS, nextRaw);
-              window.dispatchEvent(new CustomEvent('db-synced', { detail: { entity: 'students' } }));
+              const mergedStudents = Array.from(studentMap.values())
+                .filter((s) => !isDeletedId(s.id))
+                .sort((a, b) => a.id.localeCompare(b.id));
+              const prevRaw = localStorage.getItem(KEYS.STUDENTS);
+              const nextRaw = JSON.stringify(mergedStudents);
+              if (prevRaw !== nextRaw) {
+                localStorage.setItem(KEYS.STUDENTS, nextRaw);
+                window.dispatchEvent(new CustomEvent('db-synced', { detail: { entity: 'students' } }));
+              }
             }
           } else if (localStudents.length > 0) {
             pushToSupabase(KEYS.STUDENTS, localStudents);
@@ -414,24 +496,33 @@ export async function fetchAllFromSupabase(force = false): Promise<boolean> {
               updatedAt: r.updated_at,
             }));
 
-            const holidayMap = new Map<string, Holiday>();
-            localHolidays.forEach((h) => holidayMap.set(h.id, h));
-            remoteHolidays.forEach((rem) => {
-              const loc = holidayMap.get(rem.id);
-              if (!loc) holidayMap.set(rem.id, rem);
-              else {
-                const locTime = loc.updatedAt ? new Date(loc.updatedAt).getTime() : 0;
-                const remTime = rem.updatedAt ? new Date(rem.updatedAt).getTime() : 0;
-                if (remTime > locTime) holidayMap.set(rem.id, rem);
-              }
-            });
+            if (isRecentlySaved(KEYS.HOLIDAYS)) {
+              if (localHolidays.length > 0) pushToSupabase(KEYS.HOLIDAYS, localHolidays);
+            } else {
+              const holidayMap = new Map<string, Holiday>();
+              localHolidays.forEach((h) => {
+                if (!isDeletedId(h.id)) holidayMap.set(h.id, h);
+              });
+              remoteHolidays.forEach((rem) => {
+                if (isDeletedId(rem.id)) return;
+                const loc = holidayMap.get(rem.id);
+                if (!loc) holidayMap.set(rem.id, rem);
+                else {
+                  const locTime = loc.updatedAt ? new Date(loc.updatedAt).getTime() : 0;
+                  const remTime = rem.updatedAt ? new Date(rem.updatedAt).getTime() : 0;
+                  if (remTime > locTime) holidayMap.set(rem.id, rem);
+                }
+              });
 
-            const mergedHolidays = Array.from(holidayMap.values()).sort((a, b) => a.date.localeCompare(b.date));
-            const prevRaw = localStorage.getItem(KEYS.HOLIDAYS);
-            const nextRaw = JSON.stringify(mergedHolidays);
-            if (prevRaw !== nextRaw) {
-              localStorage.setItem(KEYS.HOLIDAYS, nextRaw);
-              window.dispatchEvent(new CustomEvent('db-synced', { detail: { entity: 'holidays' } }));
+              const mergedHolidays = Array.from(holidayMap.values())
+                .filter((h) => !isDeletedId(h.id))
+                .sort((a, b) => a.date.localeCompare(b.date));
+              const prevRaw = localStorage.getItem(KEYS.HOLIDAYS);
+              const nextRaw = JSON.stringify(mergedHolidays);
+              if (prevRaw !== nextRaw) {
+                localStorage.setItem(KEYS.HOLIDAYS, nextRaw);
+                window.dispatchEvent(new CustomEvent('db-synced', { detail: { entity: 'holidays' } }));
+              }
             }
           } else if (localHolidays.length > 0) {
             pushToSupabase(KEYS.HOLIDAYS, localHolidays);
@@ -612,12 +703,38 @@ export async function fetchAllFromSupabase(force = false): Promise<boolean> {
     if (response.ok) {
       const data = await response.json();
       if (data) {
-        if (data.school) localStorage.setItem(KEYS.SCHOOL, JSON.stringify(data.school));
-        if (data.classes) localStorage.setItem(KEYS.CLASSES, JSON.stringify(data.classes));
-        if (data.teachers) localStorage.setItem(KEYS.TEACHERS, JSON.stringify(data.teachers));
-        if (data.students) localStorage.setItem(KEYS.STUDENTS, JSON.stringify(data.students));
-        if (data.holidays) localStorage.setItem(KEYS.HOLIDAYS, JSON.stringify(data.holidays));
-        if (data.attendance) localStorage.setItem(KEYS.ATTENDANCE, JSON.stringify(data.attendance));
+        if (data.school && !isRecentlySaved(KEYS.SCHOOL)) {
+          let locSchool: any = null;
+          try {
+            const raw = localStorage.getItem(KEYS.SCHOOL);
+            if (raw) locSchool = JSON.parse(raw);
+          } catch {}
+          const locTime = locSchool?.updatedAt ? new Date(locSchool.updatedAt).getTime() : 0;
+          const srvTime = data.school.updatedAt ? new Date(data.school.updatedAt).getTime() : 0;
+          if (srvTime >= locTime || !locSchool?.name) {
+            localStorage.setItem(KEYS.SCHOOL, JSON.stringify(data.school));
+            window.dispatchEvent(new CustomEvent('db-synced', { detail: { entity: 'school' } }));
+          }
+        }
+        if (Array.isArray(data.classes) && !isRecentlySaved(KEYS.CLASSES)) {
+          const filtered = data.classes.filter((c: any) => !isDeletedId(c.id));
+          localStorage.setItem(KEYS.CLASSES, JSON.stringify(filtered));
+        }
+        if (Array.isArray(data.teachers) && !isRecentlySaved(KEYS.TEACHERS)) {
+          const filtered = data.teachers.filter((t: any) => !isDeletedId(t.id));
+          localStorage.setItem(KEYS.TEACHERS, JSON.stringify(filtered));
+        }
+        if (Array.isArray(data.students) && !isRecentlySaved(KEYS.STUDENTS)) {
+          const filtered = data.students.filter((s: any) => !isDeletedId(s.id));
+          localStorage.setItem(KEYS.STUDENTS, JSON.stringify(filtered));
+        }
+        if (Array.isArray(data.holidays) && !isRecentlySaved(KEYS.HOLIDAYS)) {
+          const filtered = data.holidays.filter((h: any) => !isDeletedId(h.id));
+          localStorage.setItem(KEYS.HOLIDAYS, JSON.stringify(filtered));
+        }
+        if (Array.isArray(data.attendance) && !isRecentlySaved(KEYS.ATTENDANCE)) {
+          localStorage.setItem(KEYS.ATTENDANCE, JSON.stringify(data.attendance));
+        }
 
         if (data.updatedAt) {
           lastKnownServerTime = data.updatedAt;
@@ -711,12 +828,6 @@ export async function pushToSupabase(key: string, value: any): Promise<boolean> 
             updated_at: t.updatedAt || new Date().toISOString(),
           }));
           await supabase.from('teachers').upsert(rows, { onConflict: 'id' });
-
-          // Also remove any teacher deleted from local from Supabase
-          const activeIds = rows.map((r) => r.id);
-          if (activeIds.length > 0) {
-            await supabase.from('teachers').delete().not('id', 'in', `(${activeIds.join(',')})`);
-          }
         } else if (key === KEYS.SCHOOL && value) {
           await supabase.from('school').upsert({
             id: 'school-1',

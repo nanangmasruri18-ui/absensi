@@ -184,9 +184,8 @@ export default function DataGuru() {
     );
     db.saveClasses(updatedClasses);
 
-    const updatedTeachersList = teachers.filter((t) => t.id !== id);
-    db.saveTeachers(updatedTeachersList);
-    setTeachers(updatedTeachersList);
+    db.deleteTeacher(id);
+    setTeachers(db.getTeachers());
     setClasses(db.getClasses()); // refresh classes
 
     setDeleteTargetId(null);

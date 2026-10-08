@@ -1,5 +1,5 @@
 import { SchoolProfile, ClassRombel, Teacher, Student, Holiday, Attendance } from '../types';
-import { pushToSupabase, pushAttendanceRecords } from './supabase';
+import { pushToSupabase, pushAttendanceRecords, recordRecentSave, deleteFromSupabase } from './supabase';
 
 // Simple "encryption" helper for password masking in localStorage
 export function encryptPassword(password: string): string {
@@ -26,10 +26,11 @@ const KEYS = {
 
 // Initial/Seed Data
 const DEFAULT_SCHOOL: SchoolProfile = {
-  name: 'SD Negeri Gelora 01',
-  address: 'Jl. Pemuda No. 45, Kel. Gelora, Kec. Tanah Abang, Kota Jakarta Pusat, DKI Jakarta',
-  npsn: '20103456',
+  name: 'SDN 005 Gelora',
+  address: 'Jl. Kayangan, No. 348/C Gelora',
+  npsn: '10405436',
   adminName: 'Admin Gelora',
+  updatedAt: '2020-01-01T00:00:00.000Z',
 };
 
 const DEFAULT_CLASSES: ClassRombel[] = [
@@ -233,8 +234,9 @@ class LocalDB {
   saveSchool(school: SchoolProfile) {
     const stampedSchool: SchoolProfile = {
       ...school,
-      updatedAt: school.updatedAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
+    recordRecentSave(KEYS.SCHOOL);
     localStorage.setItem(KEYS.SCHOOL, JSON.stringify(stampedSchool));
     pushToSupabase(KEYS.SCHOOL, stampedSchool);
     if (typeof window !== 'undefined') {
@@ -251,13 +253,20 @@ class LocalDB {
     const nowIso = new Date().toISOString();
     const stamped = classes.map((c) => ({
       ...c,
-      updatedAt: c.updatedAt || nowIso,
+      updatedAt: nowIso,
     }));
+    recordRecentSave(KEYS.CLASSES);
     localStorage.setItem(KEYS.CLASSES, JSON.stringify(stamped));
     pushToSupabase(KEYS.CLASSES, stamped);
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('db-synced', { detail: { entity: 'classes' } }));
     }
+  }
+
+  deleteClass(id: string) {
+    const list = this.getClasses().filter((c) => c.id !== id);
+    this.saveClasses(list);
+    deleteFromSupabase('classes', id);
   }
 
   // TEACHERS
@@ -269,13 +278,20 @@ class LocalDB {
     const nowIso = new Date().toISOString();
     const stamped = teachers.map((t) => ({
       ...t,
-      updatedAt: t.updatedAt || nowIso,
+      updatedAt: nowIso,
     }));
+    recordRecentSave(KEYS.TEACHERS);
     localStorage.setItem(KEYS.TEACHERS, JSON.stringify(stamped));
     pushToSupabase(KEYS.TEACHERS, stamped);
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('db-synced', { detail: { entity: 'teachers' } }));
     }
+  }
+
+  deleteTeacher(id: string) {
+    const list = this.getTeachers().filter((t) => t.id !== id);
+    this.saveTeachers(list);
+    deleteFromSupabase('teachers', id);
   }
 
   // STUDENTS
@@ -287,13 +303,20 @@ class LocalDB {
     const nowIso = new Date().toISOString();
     const stamped = students.map((s) => ({
       ...s,
-      updatedAt: s.updatedAt || nowIso,
+      updatedAt: nowIso,
     }));
+    recordRecentSave(KEYS.STUDENTS);
     localStorage.setItem(KEYS.STUDENTS, JSON.stringify(stamped));
     pushToSupabase(KEYS.STUDENTS, stamped);
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('db-synced', { detail: { entity: 'students' } }));
     }
+  }
+
+  deleteStudent(id: string) {
+    const list = this.getStudents().filter((s) => s.id !== id);
+    this.saveStudents(list);
+    deleteFromSupabase('students', id);
   }
 
   // HOLIDAYS
@@ -305,13 +328,20 @@ class LocalDB {
     const nowIso = new Date().toISOString();
     const stamped = holidays.map((h) => ({
       ...h,
-      updatedAt: h.updatedAt || nowIso,
+      updatedAt: nowIso,
     }));
+    recordRecentSave(KEYS.HOLIDAYS);
     localStorage.setItem(KEYS.HOLIDAYS, JSON.stringify(stamped));
     pushToSupabase(KEYS.HOLIDAYS, stamped);
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('db-synced', { detail: { entity: 'holidays' } }));
     }
+  }
+
+  deleteHoliday(id: string) {
+    const list = this.getHolidays().filter((h) => h.id !== id);
+    this.saveHolidays(list);
+    deleteFromSupabase('holidays', id);
   }
 
   // ATTENDANCE
@@ -331,8 +361,9 @@ class LocalDB {
       const nowIso = new Date().toISOString();
       const stamped = attendances.map((a) => ({
         ...a,
-        updatedAt: a.updatedAt || nowIso,
+        updatedAt: nowIso,
       }));
+      recordRecentSave(KEYS.ATTENDANCE);
       localStorage.setItem(KEYS.ATTENDANCE, JSON.stringify(stamped));
       pushToSupabase(KEYS.ATTENDANCE, stamped);
       if (typeof window !== 'undefined') {

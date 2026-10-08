@@ -1,34 +1,39 @@
 {
   "school": {
-    "name": "SD Negeri Gelora 01",
-    "address": "Jl. Pemuda No. 45, Kel. Gelora, Kec. Tanah Abang, Kota Jakarta Pusat, DKI Jakarta",
-    "npsn": "20103456",
-    "adminName": "Admin Gelora"
+    "name": "SDN 005 Gelora",
+    "address": "Jl. Kayangan, No. 348/C Gelora",
+    "npsn": "10405436",
+    "adminName": "Admin Gelora",
+    "updatedAt": "2026-10-08T04:21:10.571Z"
   },
   "classes": [
     {
       "id": "class-1a",
       "name": "Kelas 1A",
       "grade": "1",
-      "homeroomTeacherId": "teacher-guru1a"
+      "homeroomTeacherId": "teacher-guru1a",
+      "updatedAt": "2026-10-07T02:18:32.912144+00:00"
     },
     {
       "id": "class-1b",
       "name": "Kelas 1B",
       "grade": "1",
-      "homeroomTeacherId": "teacher-guru1b"
+      "homeroomTeacherId": "teacher-guru1b",
+      "updatedAt": "2026-10-07T02:18:32.912144+00:00"
     },
     {
       "id": "class-2a",
       "name": "Kelas 2A",
       "grade": "2",
-      "homeroomTeacherId": "teacher-guru2a"
+      "homeroomTeacherId": "teacher-guru2a",
+      "updatedAt": "2026-10-07T02:18:32.912144+00:00"
     },
     {
       "id": "class-2b",
       "name": "Kelas 2B",
       "grade": "2",
-      "homeroomTeacherId": ""
+      "homeroomTeacherId": "",
+      "updatedAt": "2026-10-07T02:18:32.912144+00:00"
     }
   ],
   "teachers": [
@@ -40,7 +45,8 @@
       "username": "admin",
       "passwordHash": "YWRtaW4xMjM=",
       "assignedClassId": "",
-      "role": "admin"
+      "role": "admin",
+      "updatedAt": "2026-10-08T03:37:18.649+00:00"
     },
     {
       "id": "teacher-guru1a",
@@ -50,7 +56,8 @@
       "username": "guru1a",
       "passwordHash": "cGFzc3dvcmQxYQ==",
       "assignedClassId": "class-1a",
-      "role": "guru"
+      "role": "guru",
+      "updatedAt": "2026-10-07T02:18:33.087522+00:00"
     },
     {
       "id": "teacher-guru1b",
@@ -60,7 +67,8 @@
       "username": "guru1b",
       "passwordHash": "cGFzc3dvcmQxYg==",
       "assignedClassId": "class-1b",
-      "role": "guru"
+      "role": "guru",
+      "updatedAt": "2026-10-07T02:18:33.087522+00:00"
     },
     {
       "id": "teacher-guru2a",
@@ -70,7 +78,8 @@
       "username": "guru2a",
       "passwordHash": "cGFzc3dvcmQyYQ==",
       "assignedClassId": "class-2a",
-      "role": "guru"
+      "role": "guru",
+      "updatedAt": "2026-10-07T02:18:33.087522+00:00"
     }
   ],
   "students": [
@@ -82,87 +91,8 @@
       "gender": "L",
       "birthPlace": "Jakarta",
       "birthDate": "2019-03-12",
-      "classId": "class-1a"
-    },
-    {
-      "id": "std-1a-2",
-      "nis": "1002",
-      "nisn": "0015482311",
-      "name": "Bunga Citra Lestari",
-      "gender": "P",
-      "birthPlace": "Bandung",
-      "birthDate": "2019-07-22",
-      "classId": "class-1a"
-    },
-    {
-      "id": "std-1a-3",
-      "nis": "1003",
-      "nisn": "0015482312",
-      "name": "Chandra Wijaya",
-      "gender": "L",
-      "birthPlace": "Bogor",
-      "birthDate": "2019-01-05",
-      "classId": "class-1a"
-    },
-    {
-      "id": "std-1a-4",
-      "nis": "1004",
-      "nisn": "0015482313",
-      "name": "Dian Sastrowardoyo",
-      "gender": "P",
-      "birthPlace": "Surabaya",
-      "birthDate": "2019-11-18",
-      "classId": "class-1a"
-    },
-    {
-      "id": "std-1a-5",
-      "nis": "1005",
-      "nisn": "0015482314",
-      "name": "Eko Prasetyo",
-      "gender": "L",
-      "birthPlace": "Solo",
-      "birthDate": "2019-05-30",
-      "classId": "class-1a"
-    },
-    {
-      "id": "std-1a-6",
-      "nis": "1006",
-      "nisn": "0015482315",
-      "name": "Farah Diva",
-      "gender": "P",
-      "birthPlace": "Yogyakarta",
-      "birthDate": "2019-08-14",
-      "classId": "class-1a"
-    },
-    {
-      "id": "std-1a-7",
-      "nis": "1007",
-      "nisn": "0015482316",
-      "name": "Gilang Ramadhan",
-      "gender": "L",
-      "birthPlace": "Semarang",
-      "birthDate": "2019-02-28",
-      "classId": "class-1a"
-    },
-    {
-      "id": "std-1a-8",
-      "nis": "1008",
-      "nisn": "0015482317",
-      "name": "Hesti Purwadinata",
-      "gender": "P",
-      "birthPlace": "Medan",
-      "birthDate": "2019-04-16",
-      "classId": "class-1a"
-    },
-    {
-      "id": "std-1a-9",
-      "nis": "1009",
-      "nisn": "0015482318",
-      "name": "Irwan Syah",
-      "gender": "L",
-      "birthPlace": "Palembang",
-      "birthDate": "2019-09-03",
-      "classId": "class-1a"
+      "classId": "class-1a",
+      "updatedAt": "2026-10-08T04:17:24.637055+00:00"
     },
     {
       "id": "std-1a-10",
@@ -172,7 +102,96 @@
       "gender": "P",
       "birthPlace": "Denpasar",
       "birthDate": "2019-10-10",
-      "classId": "class-1a"
+      "classId": "class-1a",
+      "updatedAt": "2026-10-08T04:17:24.637055+00:00"
+    },
+    {
+      "id": "std-1a-2",
+      "nis": "1002",
+      "nisn": "0015482311",
+      "name": "Bunga Citra Lestari",
+      "gender": "P",
+      "birthPlace": "Bandung",
+      "birthDate": "2019-07-22",
+      "classId": "class-1a",
+      "updatedAt": "2026-10-08T04:17:24.637055+00:00"
+    },
+    {
+      "id": "std-1a-3",
+      "nis": "1003",
+      "nisn": "0015482312",
+      "name": "Chandra Wijaya",
+      "gender": "L",
+      "birthPlace": "Bogor",
+      "birthDate": "2019-01-05",
+      "classId": "class-1a",
+      "updatedAt": "2026-10-08T04:17:24.637055+00:00"
+    },
+    {
+      "id": "std-1a-4",
+      "nis": "1004",
+      "nisn": "0015482313",
+      "name": "Dian Sastrowardoyo",
+      "gender": "P",
+      "birthPlace": "Surabaya",
+      "birthDate": "2019-11-18",
+      "classId": "class-1a",
+      "updatedAt": "2026-10-08T04:17:24.637055+00:00"
+    },
+    {
+      "id": "std-1a-5",
+      "nis": "1005",
+      "nisn": "0015482314",
+      "name": "Eko Prasetyo",
+      "gender": "L",
+      "birthPlace": "Solo",
+      "birthDate": "2019-05-30",
+      "classId": "class-1a",
+      "updatedAt": "2026-10-08T04:17:24.637055+00:00"
+    },
+    {
+      "id": "std-1a-6",
+      "nis": "1006",
+      "nisn": "0015482315",
+      "name": "Farah Diva",
+      "gender": "P",
+      "birthPlace": "Yogyakarta",
+      "birthDate": "2019-08-14",
+      "classId": "class-1a",
+      "updatedAt": "2026-10-08T04:17:24.637055+00:00"
+    },
+    {
+      "id": "std-1a-7",
+      "nis": "1007",
+      "nisn": "0015482316",
+      "name": "Gilang Ramadhan",
+      "gender": "L",
+      "birthPlace": "Semarang",
+      "birthDate": "2019-02-28",
+      "classId": "class-1a",
+      "updatedAt": "2026-10-08T04:17:24.637055+00:00"
+    },
+    {
+      "id": "std-1a-8",
+      "nis": "1008",
+      "nisn": "0015482317",
+      "name": "Hesti Purwadinata",
+      "gender": "P",
+      "birthPlace": "Medan",
+      "birthDate": "2019-04-16",
+      "classId": "class-1a",
+      "updatedAt": "2026-10-08T04:17:24.637055+00:00"
+    },
+    {
+      "id": "std-1a-9",
+      "nis": "1009",
+      "nisn": "0015482318",
+      "name": "Irwan Syah",
+      "gender": "L",
+      "birthPlace": "Palembang",
+      "birthDate": "2019-09-03",
+      "classId": "class-1a",
+      "updatedAt": "2026-10-08T04:17:24.637055+00:00"
     },
     {
       "id": "std-1b-1",
@@ -182,7 +201,8 @@
       "gender": "L",
       "birthPlace": "Jakarta",
       "birthDate": "2019-04-12",
-      "classId": "class-1b"
+      "classId": "class-1b",
+      "updatedAt": "2026-10-08T04:17:24.637055+00:00"
     },
     {
       "id": "std-1b-2",
@@ -192,7 +212,8 @@
       "gender": "P",
       "birthPlace": "Depok",
       "birthDate": "2019-05-15",
-      "classId": "class-1b"
+      "classId": "class-1b",
+      "updatedAt": "2026-10-08T04:17:24.637055+00:00"
     },
     {
       "id": "std-1b-3",
@@ -202,7 +223,8 @@
       "gender": "L",
       "birthPlace": "Bogor",
       "birthDate": "2019-06-20",
-      "classId": "class-1b"
+      "classId": "class-1b",
+      "updatedAt": "2026-10-08T04:17:24.637055+00:00"
     },
     {
       "id": "std-1b-4",
@@ -212,7 +234,8 @@
       "gender": "P",
       "birthPlace": "Bandung",
       "birthDate": "2019-07-25",
-      "classId": "class-1b"
+      "classId": "class-1b",
+      "updatedAt": "2026-10-08T04:17:24.637055+00:00"
     },
     {
       "id": "std-1b-5",
@@ -222,7 +245,8 @@
       "gender": "L",
       "birthPlace": "Jayapura",
       "birthDate": "2019-10-05",
-      "classId": "class-1b"
+      "classId": "class-1b",
+      "updatedAt": "2026-10-08T04:17:24.637055+00:00"
     },
     {
       "id": "std-2a-1",
@@ -232,7 +256,8 @@
       "gender": "L",
       "birthPlace": "Blora",
       "birthDate": "2018-12-21",
-      "classId": "class-2a"
+      "classId": "class-2a",
+      "updatedAt": "2026-10-08T04:17:24.637055+00:00"
     },
     {
       "id": "std-2a-2",
@@ -242,7 +267,8 @@
       "gender": "P",
       "birthPlace": "Balikpapan",
       "birthDate": "2018-09-11",
-      "classId": "class-2a"
+      "classId": "class-2a",
+      "updatedAt": "2026-10-08T04:17:24.637055+00:00"
     },
     {
       "id": "std-2a-3",
@@ -252,49 +278,58 @@
       "gender": "L",
       "birthPlace": "Kendari",
       "birthDate": "2018-01-02",
-      "classId": "class-2a"
+      "classId": "class-2a",
+      "updatedAt": "2026-10-08T04:17:24.637055+00:00"
     }
   ],
   "holidays": [
     {
+      "id": "hol-4",
+      "date": "2026-05-01",
+      "name": "Hari Buruh Internasional",
+      "updatedAt": "2026-10-07T02:18:50.977877+00:00"
+    },
+    {
       "id": "hol-1",
       "date": "2026-06-01",
-      "name": "Hari Lahir Pancasila"
+      "name": "Hari Lahir Pancasila",
+      "updatedAt": "2026-10-07T02:18:50.977877+00:00"
     },
     {
       "id": "hol-2",
       "date": "2026-06-17",
-      "name": "Tahun Baru Islam 1448 H"
+      "name": "Tahun Baru Islam 1448 H",
+      "updatedAt": "2026-10-07T02:18:50.977877+00:00"
     },
     {
       "id": "hol-3",
       "date": "2026-08-17",
-      "name": "Hari Kemerdekaan RI"
-    },
-    {
-      "id": "hol-4",
-      "date": "2026-05-01",
-      "name": "Hari Buruh Internasional"
+      "name": "Hari Kemerdekaan RI",
+      "updatedAt": "2026-10-07T02:18:50.977877+00:00"
     },
     {
       "id": "hol-5",
       "date": "2026-10-01",
-      "name": "Hari Kesaktian Pancasila"
+      "name": "Hari Kesaktian Pancasila",
+      "updatedAt": "2026-10-07T02:18:50.977877+00:00"
     },
     {
       "id": "hol-6",
       "date": "2026-10-28",
-      "name": "Hari Sumpah Pemuda"
+      "name": "Hari Sumpah Pemuda",
+      "updatedAt": "2026-10-07T02:18:50.977877+00:00"
     },
     {
       "id": "hol-7",
       "date": "2026-11-10",
-      "name": "Hari Pahlawan"
+      "name": "Hari Pahlawan",
+      "updatedAt": "2026-10-07T02:18:50.977877+00:00"
     },
     {
       "id": "hol-8",
       "date": "2026-12-25",
-      "name": "Hari Raya Natal"
+      "name": "Hari Raya Natal",
+      "updatedAt": "2026-10-07T02:18:50.977877+00:00"
     }
   ],
   "attendance": [
@@ -302,6 +337,15 @@
       "id": "class-1a-std-1a-1-2026-06-02",
       "classId": "class-1a",
       "studentId": "std-1a-1",
+      "date": "2026-06-02",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
+      "id": "class-1a-std-1a-10-2026-06-02",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
       "date": "2026-06-02",
       "status": "H",
       "notes": "",
@@ -374,15 +418,6 @@
       "id": "class-1a-std-1a-9-2026-06-02",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-06-02",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-06-02",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-06-02",
       "status": "H",
       "notes": "",
@@ -470,6 +505,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-06-03",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-06-03",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-06-03",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -536,15 +580,6 @@
       "id": "class-1a-std-1a-9-2026-06-03",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-06-03",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-06-03",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-06-03",
       "status": "H",
       "notes": "",
@@ -632,6 +667,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-06-04",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-06-04",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-06-04",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -701,15 +745,6 @@
       "date": "2026-06-04",
       "status": "I",
       "notes": "Acara keluarga",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-06-04",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
-      "date": "2026-06-04",
-      "status": "H",
-      "notes": "",
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
@@ -794,6 +829,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-06-05",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-06-05",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-06-05",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -860,15 +904,6 @@
       "id": "class-1a-std-1a-9-2026-06-05",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-06-05",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-06-05",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-06-05",
       "status": "H",
       "notes": "",
@@ -956,6 +991,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-06-06",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-06-06",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-06-06",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -1022,15 +1066,6 @@
       "id": "class-1a-std-1a-9-2026-06-06",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-06-06",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-06-06",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-06-06",
       "status": "H",
       "notes": "",
@@ -1118,6 +1153,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-06-08",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-06-08",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-06-08",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -1184,15 +1228,6 @@
       "id": "class-1a-std-1a-9-2026-06-08",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-06-08",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-06-08",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-06-08",
       "status": "H",
       "notes": "",
@@ -1280,6 +1315,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-06-09",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-06-09",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-06-09",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -1346,15 +1390,6 @@
       "id": "class-1a-std-1a-9-2026-06-09",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-06-09",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-06-09",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-06-09",
       "status": "H",
       "notes": "",
@@ -1442,6 +1477,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-06-10",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-06-10",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-06-10",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -1508,15 +1552,6 @@
       "id": "class-1a-std-1a-9-2026-06-10",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-06-10",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-06-10",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-06-10",
       "status": "H",
       "notes": "",
@@ -1604,6 +1639,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-06-11",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-06-11",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-06-11",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -1673,15 +1717,6 @@
       "date": "2026-06-11",
       "status": "S",
       "notes": "Demam / flu",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-06-11",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
-      "date": "2026-06-11",
-      "status": "H",
-      "notes": "",
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
@@ -1766,6 +1801,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-06-12",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-06-12",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-06-12",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -1832,15 +1876,6 @@
       "id": "class-1a-std-1a-9-2026-06-12",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-06-12",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-06-12",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-06-12",
       "status": "H",
       "notes": "",
@@ -1928,6 +1963,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-06-13",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-06-13",
+      "status": "I",
+      "notes": "Acara keluarga",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-06-13",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -1997,15 +2041,6 @@
       "date": "2026-06-13",
       "status": "H",
       "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-06-13",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
-      "date": "2026-06-13",
-      "status": "I",
-      "notes": "Acara keluarga",
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
@@ -2090,6 +2125,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-06-15",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-06-15",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-06-15",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -2156,15 +2200,6 @@
       "id": "class-1a-std-1a-9-2026-06-15",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-06-15",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-06-15",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-06-15",
       "status": "H",
       "notes": "",
@@ -2252,6 +2287,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-06-16",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-06-16",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-06-16",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -2318,15 +2362,6 @@
       "id": "class-1a-std-1a-9-2026-06-16",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-06-16",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-06-16",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-06-16",
       "status": "H",
       "notes": "",
@@ -2414,6 +2449,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-06-18",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-06-18",
+      "status": "I",
+      "notes": "Acara keluarga",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-06-18",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -2483,15 +2527,6 @@
       "date": "2026-06-18",
       "status": "H",
       "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-06-18",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
-      "date": "2026-06-18",
-      "status": "I",
-      "notes": "Acara keluarga",
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
@@ -2576,6 +2611,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-06-19",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-06-19",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-06-19",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -2642,15 +2686,6 @@
       "id": "class-1a-std-1a-9-2026-06-19",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-06-19",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-06-19",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-06-19",
       "status": "H",
       "notes": "",
@@ -2738,6 +2773,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-06-20",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-06-20",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-06-20",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -2807,15 +2851,6 @@
       "date": "2026-06-20",
       "status": "S",
       "notes": "Demam / flu",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-06-20",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
-      "date": "2026-06-20",
-      "status": "H",
-      "notes": "",
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
@@ -2900,6 +2935,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-07-01",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-07-01",
+      "status": "A",
+      "notes": "Tanpa keterangan",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-07-01",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -2969,15 +3013,6 @@
       "date": "2026-07-01",
       "status": "H",
       "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-07-01",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
-      "date": "2026-07-01",
-      "status": "A",
-      "notes": "Tanpa keterangan",
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
@@ -3062,6 +3097,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-07-02",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-07-02",
+      "status": "S",
+      "notes": "Demam / flu",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-07-02",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -3131,15 +3175,6 @@
       "date": "2026-07-02",
       "status": "A",
       "notes": "Tanpa keterangan",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-07-02",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
-      "date": "2026-07-02",
-      "status": "S",
-      "notes": "Demam / flu",
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
@@ -3224,6 +3259,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-07-03",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-07-03",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-07-03",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -3290,15 +3334,6 @@
       "id": "class-1a-std-1a-9-2026-07-03",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-07-03",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-07-03",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-07-03",
       "status": "H",
       "notes": "",
@@ -3386,6 +3421,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-07-04",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-07-04",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-07-04",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -3452,15 +3496,6 @@
       "id": "class-1a-std-1a-9-2026-07-04",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-07-04",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-07-04",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-07-04",
       "status": "H",
       "notes": "",
@@ -3548,6 +3583,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-07-06",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-07-06",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-07-06",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -3614,15 +3658,6 @@
       "id": "class-1a-std-1a-9-2026-07-06",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-07-06",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-07-06",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-07-06",
       "status": "H",
       "notes": "",
@@ -3710,6 +3745,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-07-07",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-07-07",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-07-07",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -3776,15 +3820,6 @@
       "id": "class-1a-std-1a-9-2026-07-07",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-07-07",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-07-07",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-07-07",
       "status": "H",
       "notes": "",
@@ -3872,6 +3907,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-07-08",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-07-08",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-07-08",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -3938,15 +3982,6 @@
       "id": "class-1a-std-1a-9-2026-07-08",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-07-08",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-07-08",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-07-08",
       "status": "H",
       "notes": "",
@@ -4034,6 +4069,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-07-09",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-07-09",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-07-09",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -4100,15 +4144,6 @@
       "id": "class-1a-std-1a-9-2026-07-09",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-07-09",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-07-09",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-07-09",
       "status": "H",
       "notes": "",
@@ -4196,6 +4231,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-07-10",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-07-10",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-07-10",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -4262,15 +4306,6 @@
       "id": "class-1a-std-1a-9-2026-07-10",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-07-10",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-07-10",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-07-10",
       "status": "H",
       "notes": "",
@@ -4358,6 +4393,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-07-11",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-07-11",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-07-11",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -4424,15 +4468,6 @@
       "id": "class-1a-std-1a-9-2026-07-11",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-07-11",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-07-11",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-07-11",
       "status": "H",
       "notes": "",
@@ -4520,6 +4555,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-07-13",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-07-13",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-07-13",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -4589,15 +4633,6 @@
       "date": "2026-07-13",
       "status": "S",
       "notes": "Demam / flu",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-07-13",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
-      "date": "2026-07-13",
-      "status": "H",
-      "notes": "",
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
@@ -4682,6 +4717,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-07-14",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-07-14",
+      "status": "A",
+      "notes": "Tanpa keterangan",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-07-14",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -4751,15 +4795,6 @@
       "date": "2026-07-14",
       "status": "H",
       "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-07-14",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
-      "date": "2026-07-14",
-      "status": "A",
-      "notes": "Tanpa keterangan",
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
@@ -4844,6 +4879,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-07-15",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-07-15",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-07-15",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -4910,15 +4954,6 @@
       "id": "class-1a-std-1a-9-2026-07-15",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-07-15",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-07-15",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-07-15",
       "status": "H",
       "notes": "",
@@ -5006,6 +5041,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-07-16",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-07-16",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-07-16",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -5072,15 +5116,6 @@
       "id": "class-1a-std-1a-9-2026-07-16",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-07-16",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-07-16",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-07-16",
       "status": "H",
       "notes": "",
@@ -5168,6 +5203,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-07-17",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-07-17",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-07-17",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -5234,15 +5278,6 @@
       "id": "class-1a-std-1a-9-2026-07-17",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-07-17",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-07-17",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-07-17",
       "status": "H",
       "notes": "",
@@ -5330,6 +5365,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-07-18",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-07-18",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-07-18",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -5396,15 +5440,6 @@
       "id": "class-1a-std-1a-9-2026-07-18",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-07-18",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-07-18",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-07-18",
       "status": "H",
       "notes": "",
@@ -5492,6 +5527,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-07-20",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-07-20",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-07-20",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -5558,15 +5602,6 @@
       "id": "class-1a-std-1a-9-2026-07-20",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-07-20",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-07-20",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-07-20",
       "status": "H",
       "notes": "",
@@ -5654,6 +5689,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-07-21",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-07-21",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-07-21",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -5723,15 +5767,6 @@
       "date": "2026-07-21",
       "status": "A",
       "notes": "Tanpa keterangan",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-07-21",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
-      "date": "2026-07-21",
-      "status": "H",
-      "notes": "",
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
@@ -5816,6 +5851,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-07-22",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-07-22",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-07-22",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -5882,15 +5926,6 @@
       "id": "class-1a-std-1a-9-2026-07-22",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-07-22",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-07-22",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-07-22",
       "status": "H",
       "notes": "",
@@ -5978,6 +6013,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-07-23",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-07-23",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-07-23",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -6047,15 +6091,6 @@
       "date": "2026-07-23",
       "status": "S",
       "notes": "Demam / flu",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-07-23",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
-      "date": "2026-07-23",
-      "status": "H",
-      "notes": "",
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
@@ -6140,6 +6175,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-07-24",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-07-24",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-07-24",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -6206,15 +6250,6 @@
       "id": "class-1a-std-1a-9-2026-07-24",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-07-24",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-07-24",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-07-24",
       "status": "H",
       "notes": "",
@@ -6302,6 +6337,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-07-25",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-07-25",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-07-25",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -6368,15 +6412,6 @@
       "id": "class-1a-std-1a-9-2026-07-25",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-07-25",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-07-25",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-07-25",
       "status": "H",
       "notes": "",
@@ -6464,6 +6499,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-07-27",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-07-27",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-07-27",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -6530,15 +6574,6 @@
       "id": "class-1a-std-1a-9-2026-07-27",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-07-27",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-07-27",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-07-27",
       "status": "H",
       "notes": "",
@@ -6626,6 +6661,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-07-28",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-07-28",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-07-28",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -6692,15 +6736,6 @@
       "id": "class-1a-std-1a-9-2026-07-28",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-07-28",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-07-28",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-07-28",
       "status": "H",
       "notes": "",
@@ -6788,6 +6823,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-07-29",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-07-29",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-07-29",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -6854,15 +6898,6 @@
       "id": "class-1a-std-1a-9-2026-07-29",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-07-29",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-07-29",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-07-29",
       "status": "H",
       "notes": "",
@@ -6950,6 +6985,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-07-30",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-07-30",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-07-30",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -7016,15 +7060,6 @@
       "id": "class-1a-std-1a-9-2026-07-30",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-07-30",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-07-30",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-07-30",
       "status": "H",
       "notes": "",
@@ -7112,6 +7147,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-07-31",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-07-31",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-07-31",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -7178,15 +7222,6 @@
       "id": "class-1a-std-1a-9-2026-07-31",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-07-31",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-07-31",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-07-31",
       "status": "H",
       "notes": "",
@@ -7274,6 +7309,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-08-01",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-08-01",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-08-01",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -7340,15 +7384,6 @@
       "id": "class-1a-std-1a-9-2026-08-01",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-08-01",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-08-01",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-08-01",
       "status": "H",
       "notes": "",
@@ -7436,6 +7471,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-08-03",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-08-03",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-08-03",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -7505,15 +7549,6 @@
       "date": "2026-08-03",
       "status": "S",
       "notes": "Demam / flu",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-08-03",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
-      "date": "2026-08-03",
-      "status": "H",
-      "notes": "",
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
@@ -7598,6 +7633,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-08-04",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-08-04",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-08-04",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -7664,15 +7708,6 @@
       "id": "class-1a-std-1a-9-2026-08-04",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-08-04",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-08-04",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-08-04",
       "status": "H",
       "notes": "",
@@ -7760,6 +7795,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-08-05",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-08-05",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-08-05",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -7826,15 +7870,6 @@
       "id": "class-1a-std-1a-9-2026-08-05",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-08-05",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-08-05",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-08-05",
       "status": "H",
       "notes": "",
@@ -7922,6 +7957,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-08-06",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-08-06",
+      "status": "I",
+      "notes": "Acara keluarga",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-08-06",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -7991,15 +8035,6 @@
       "date": "2026-08-06",
       "status": "H",
       "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-08-06",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
-      "date": "2026-08-06",
-      "status": "I",
-      "notes": "Acara keluarga",
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
@@ -8084,6 +8119,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-08-07",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-08-07",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-08-07",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -8150,15 +8194,6 @@
       "id": "class-1a-std-1a-9-2026-08-07",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-08-07",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-08-07",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-08-07",
       "status": "H",
       "notes": "",
@@ -8246,6 +8281,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-08-08",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-08-08",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-08-08",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -8312,15 +8356,6 @@
       "id": "class-1a-std-1a-9-2026-08-08",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-08-08",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-08-08",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-08-08",
       "status": "H",
       "notes": "",
@@ -8408,6 +8443,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-08-10",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-08-10",
+      "status": "I",
+      "notes": "Acara keluarga",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-08-10",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -8477,15 +8521,6 @@
       "date": "2026-08-10",
       "status": "H",
       "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-08-10",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
-      "date": "2026-08-10",
-      "status": "I",
-      "notes": "Acara keluarga",
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
@@ -8570,6 +8605,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-08-11",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-08-11",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-08-11",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -8636,15 +8680,6 @@
       "id": "class-1a-std-1a-9-2026-08-11",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-08-11",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-08-11",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-08-11",
       "status": "H",
       "notes": "",
@@ -8732,6 +8767,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-08-12",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-08-12",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-08-12",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -8798,15 +8842,6 @@
       "id": "class-1a-std-1a-9-2026-08-12",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-08-12",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-08-12",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-08-12",
       "status": "H",
       "notes": "",
@@ -8894,6 +8929,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-08-13",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-08-13",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-08-13",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -8960,15 +9004,6 @@
       "id": "class-1a-std-1a-9-2026-08-13",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-08-13",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-08-13",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-08-13",
       "status": "H",
       "notes": "",
@@ -9056,6 +9091,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-08-14",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-08-14",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-08-14",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -9122,15 +9166,6 @@
       "id": "class-1a-std-1a-9-2026-08-14",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-08-14",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-08-14",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-08-14",
       "status": "H",
       "notes": "",
@@ -9218,6 +9253,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-08-15",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-08-15",
+      "status": "S",
+      "notes": "Demam / flu",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-08-15",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -9287,15 +9331,6 @@
       "date": "2026-08-15",
       "status": "H",
       "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-08-15",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
-      "date": "2026-08-15",
-      "status": "S",
-      "notes": "Demam / flu",
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
@@ -9380,6 +9415,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-08-18",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-08-18",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-08-18",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -9446,15 +9490,6 @@
       "id": "class-1a-std-1a-9-2026-08-18",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-08-18",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-08-18",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-08-18",
       "status": "H",
       "notes": "",
@@ -9542,6 +9577,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-08-19",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-08-19",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-08-19",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -9608,15 +9652,6 @@
       "id": "class-1a-std-1a-9-2026-08-19",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-08-19",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-08-19",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-08-19",
       "status": "H",
       "notes": "",
@@ -9704,6 +9739,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-08-20",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-08-20",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-08-20",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -9770,15 +9814,6 @@
       "id": "class-1a-std-1a-9-2026-08-20",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-08-20",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-08-20",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-08-20",
       "status": "H",
       "notes": "",
@@ -9866,6 +9901,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-08-21",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-08-21",
+      "status": "S",
+      "notes": "Demam / flu",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-08-21",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -9935,15 +9979,6 @@
       "date": "2026-08-21",
       "status": "H",
       "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-08-21",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
-      "date": "2026-08-21",
-      "status": "S",
-      "notes": "Demam / flu",
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
@@ -10028,6 +10063,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-08-22",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-08-22",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-08-22",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -10094,15 +10138,6 @@
       "id": "class-1a-std-1a-9-2026-08-22",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-08-22",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-08-22",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-08-22",
       "status": "H",
       "notes": "",
@@ -10190,6 +10225,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-08-24",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-08-24",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-08-24",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -10256,15 +10300,6 @@
       "id": "class-1a-std-1a-9-2026-08-24",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-08-24",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-08-24",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-08-24",
       "status": "H",
       "notes": "",
@@ -10352,6 +10387,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-08-25",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-08-25",
+      "status": "S",
+      "notes": "Demam / flu",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-08-25",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -10421,15 +10465,6 @@
       "date": "2026-08-25",
       "status": "H",
       "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-08-25",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
-      "date": "2026-08-25",
-      "status": "S",
-      "notes": "Demam / flu",
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
@@ -10514,6 +10549,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-08-26",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-08-26",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-08-26",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -10580,15 +10624,6 @@
       "id": "class-1a-std-1a-9-2026-08-26",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-08-26",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-08-26",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-08-26",
       "status": "H",
       "notes": "",
@@ -10676,6 +10711,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-08-27",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-08-27",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-08-27",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -10742,15 +10786,6 @@
       "id": "class-1a-std-1a-9-2026-08-27",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-08-27",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-08-27",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-08-27",
       "status": "H",
       "notes": "",
@@ -10838,6 +10873,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-08-28",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-08-28",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-08-28",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -10907,15 +10951,6 @@
       "date": "2026-08-28",
       "status": "S",
       "notes": "Demam / flu",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-08-28",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
-      "date": "2026-08-28",
-      "status": "H",
-      "notes": "",
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
@@ -11000,6 +11035,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-08-29",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-08-29",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-08-29",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -11066,15 +11110,6 @@
       "id": "class-1a-std-1a-9-2026-08-29",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-08-29",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-08-29",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-08-29",
       "status": "H",
       "notes": "",
@@ -11162,6 +11197,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-08-31",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-08-31",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-08-31",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -11228,15 +11272,6 @@
       "id": "class-1a-std-1a-9-2026-08-31",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-08-31",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-08-31",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-08-31",
       "status": "H",
       "notes": "",
@@ -11324,6 +11359,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-09-01",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-09-01",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-09-01",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -11390,15 +11434,6 @@
       "id": "class-1a-std-1a-9-2026-09-01",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-09-01",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-09-01",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-09-01",
       "status": "H",
       "notes": "",
@@ -11486,6 +11521,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-09-02",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-09-02",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-09-02",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -11552,15 +11596,6 @@
       "id": "class-1a-std-1a-9-2026-09-02",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-09-02",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-09-02",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-09-02",
       "status": "H",
       "notes": "",
@@ -11648,6 +11683,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-09-03",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-09-03",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-09-03",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -11714,15 +11758,6 @@
       "id": "class-1a-std-1a-9-2026-09-03",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-09-03",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-09-03",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-09-03",
       "status": "H",
       "notes": "",
@@ -11810,6 +11845,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-09-04",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-09-04",
+      "status": "S",
+      "notes": "Demam / flu",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-09-04",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -11879,15 +11923,6 @@
       "date": "2026-09-04",
       "status": "H",
       "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-09-04",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
-      "date": "2026-09-04",
-      "status": "S",
-      "notes": "Demam / flu",
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
@@ -11972,6 +12007,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-09-05",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-09-05",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-09-05",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -12038,15 +12082,6 @@
       "id": "class-1a-std-1a-9-2026-09-05",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-09-05",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-09-05",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-09-05",
       "status": "H",
       "notes": "",
@@ -12134,6 +12169,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-09-07",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-09-07",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-09-07",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -12200,15 +12244,6 @@
       "id": "class-1a-std-1a-9-2026-09-07",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-09-07",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-09-07",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-09-07",
       "status": "H",
       "notes": "",
@@ -12296,6 +12331,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-09-08",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-09-08",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-09-08",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -12362,15 +12406,6 @@
       "id": "class-1a-std-1a-9-2026-09-08",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-09-08",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-09-08",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-09-08",
       "status": "H",
       "notes": "",
@@ -12458,6 +12493,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-09-09",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-09-09",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-09-09",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -12524,15 +12568,6 @@
       "id": "class-1a-std-1a-9-2026-09-09",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-09-09",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-09-09",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-09-09",
       "status": "H",
       "notes": "",
@@ -12620,6 +12655,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-09-10",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-09-10",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-09-10",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -12686,15 +12730,6 @@
       "id": "class-1a-std-1a-9-2026-09-10",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-09-10",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-09-10",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-09-10",
       "status": "H",
       "notes": "",
@@ -12782,6 +12817,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-09-11",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-09-11",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-09-11",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -12848,15 +12892,6 @@
       "id": "class-1a-std-1a-9-2026-09-11",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-09-11",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-09-11",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-09-11",
       "status": "H",
       "notes": "",
@@ -12944,6 +12979,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-09-12",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-09-12",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-09-12",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -13010,15 +13054,6 @@
       "id": "class-1a-std-1a-9-2026-09-12",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-09-12",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-09-12",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-09-12",
       "status": "H",
       "notes": "",
@@ -13106,6 +13141,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-09-14",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-09-14",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-09-14",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -13172,15 +13216,6 @@
       "id": "class-1a-std-1a-9-2026-09-14",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-09-14",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-09-14",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-09-14",
       "status": "H",
       "notes": "",
@@ -13268,6 +13303,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-09-15",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-09-15",
+      "status": "A",
+      "notes": "Tanpa keterangan",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-09-15",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -13337,15 +13381,6 @@
       "date": "2026-09-15",
       "status": "H",
       "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-09-15",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
-      "date": "2026-09-15",
-      "status": "A",
-      "notes": "Tanpa keterangan",
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
@@ -13430,6 +13465,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-09-16",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-09-16",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-09-16",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -13496,15 +13540,6 @@
       "id": "class-1a-std-1a-9-2026-09-16",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-09-16",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-09-16",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-09-16",
       "status": "H",
       "notes": "",
@@ -13592,6 +13627,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-09-17",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-09-17",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-09-17",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -13661,15 +13705,6 @@
       "date": "2026-09-17",
       "status": "S",
       "notes": "Demam / flu",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-09-17",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
-      "date": "2026-09-17",
-      "status": "H",
-      "notes": "",
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
@@ -13754,6 +13789,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-09-18",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-09-18",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-09-18",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -13820,15 +13864,6 @@
       "id": "class-1a-std-1a-9-2026-09-18",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-09-18",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-09-18",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-09-18",
       "status": "H",
       "notes": "",
@@ -13916,6 +13951,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-09-19",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-09-19",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-09-19",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -13985,15 +14029,6 @@
       "date": "2026-09-19",
       "status": "S",
       "notes": "Demam / flu",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-09-19",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
-      "date": "2026-09-19",
-      "status": "H",
-      "notes": "",
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
@@ -14078,6 +14113,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-09-21",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-09-21",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-09-21",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -14144,15 +14188,6 @@
       "id": "class-1a-std-1a-9-2026-09-21",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-09-21",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-09-21",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-09-21",
       "status": "H",
       "notes": "",
@@ -14240,6 +14275,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-09-22",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-09-22",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-09-22",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -14306,15 +14350,6 @@
       "id": "class-1a-std-1a-9-2026-09-22",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-09-22",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-09-22",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-09-22",
       "status": "H",
       "notes": "",
@@ -14402,6 +14437,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-09-23",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-09-23",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-09-23",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -14468,15 +14512,6 @@
       "id": "class-1a-std-1a-9-2026-09-23",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-09-23",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-09-23",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-09-23",
       "status": "H",
       "notes": "",
@@ -14564,6 +14599,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-09-24",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-09-24",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-09-24",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -14630,15 +14674,6 @@
       "id": "class-1a-std-1a-9-2026-09-24",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-09-24",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-09-24",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-09-24",
       "status": "H",
       "notes": "",
@@ -14726,6 +14761,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-09-25",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-09-25",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-09-25",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -14795,15 +14839,6 @@
       "date": "2026-09-25",
       "status": "S",
       "notes": "Demam / flu",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-09-25",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
-      "date": "2026-09-25",
-      "status": "H",
-      "notes": "",
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
@@ -14888,6 +14923,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-09-26",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-09-26",
+      "status": "A",
+      "notes": "Tanpa keterangan",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-09-26",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -14957,15 +15001,6 @@
       "date": "2026-09-26",
       "status": "I",
       "notes": "Acara keluarga",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-09-26",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
-      "date": "2026-09-26",
-      "status": "A",
-      "notes": "Tanpa keterangan",
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
@@ -15050,6 +15085,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-09-28",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-09-28",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-09-28",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -15116,15 +15160,6 @@
       "id": "class-1a-std-1a-9-2026-09-28",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-09-28",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-09-28",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-09-28",
       "status": "H",
       "notes": "",
@@ -15212,6 +15247,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-09-29",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-09-29",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-09-29",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -15281,15 +15325,6 @@
       "date": "2026-09-29",
       "status": "I",
       "notes": "Acara keluarga",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-09-29",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
-      "date": "2026-09-29",
-      "status": "H",
-      "notes": "",
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
@@ -15374,6 +15409,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-09-30",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-09-30",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-09-30",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -15440,15 +15484,6 @@
       "id": "class-1a-std-1a-9-2026-09-30",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-09-30",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-09-30",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-09-30",
       "status": "H",
       "notes": "",
@@ -15536,6 +15571,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-10-02",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-10-02",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-10-02",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -15602,15 +15646,6 @@
       "id": "class-1a-std-1a-9-2026-10-02",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-10-02",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-10-02",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-10-02",
       "status": "H",
       "notes": "",
@@ -15698,6 +15733,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-10-03",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-10-03",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-10-03",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -15764,15 +15808,6 @@
       "id": "class-1a-std-1a-9-2026-10-03",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-10-03",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-10-03",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-10-03",
       "status": "H",
       "notes": "",
@@ -15860,6 +15895,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-10-05",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-10-05",
+      "status": "S",
+      "notes": "Demam / flu",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-10-05",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -15929,15 +15973,6 @@
       "date": "2026-10-05",
       "status": "H",
       "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-10-05",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
-      "date": "2026-10-05",
-      "status": "S",
-      "notes": "Demam / flu",
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
@@ -16022,6 +16057,15 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     },
     {
+      "id": "class-1a-std-1a-10-2026-10-06",
+      "classId": "class-1a",
+      "studentId": "std-1a-10",
+      "date": "2026-10-06",
+      "status": "H",
+      "notes": "",
+      "updatedAt": "2026-10-06T12:00:00+00:00"
+    },
+    {
       "id": "class-1a-std-1a-2-2026-10-06",
       "classId": "class-1a",
       "studentId": "std-1a-2",
@@ -16088,15 +16132,6 @@
       "id": "class-1a-std-1a-9-2026-10-06",
       "classId": "class-1a",
       "studentId": "std-1a-9",
-      "date": "2026-10-06",
-      "status": "H",
-      "notes": "",
-      "updatedAt": "2026-10-06T12:00:00+00:00"
-    },
-    {
-      "id": "class-1a-std-1a-10-2026-10-06",
-      "classId": "class-1a",
-      "studentId": "std-1a-10",
       "date": "2026-10-06",
       "status": "H",
       "notes": "",
@@ -16175,5 +16210,5 @@
       "updatedAt": "2026-10-06T12:00:00+00:00"
     }
   ],
-  "updatedAt": "2026-10-07T03:26:21.136Z"
+  "updatedAt": "2026-10-08T04:18:43.407Z"
 }
