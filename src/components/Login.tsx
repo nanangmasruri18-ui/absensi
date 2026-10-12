@@ -9,7 +9,6 @@ import {
   Eye, 
   EyeOff, 
   LogIn, 
-  ShieldCheck, 
   Database, 
   RefreshCw, 
   CheckCircle2, 
@@ -145,11 +144,6 @@ export default function Login({ onLoginSuccess }: LoginProps) {
     }
   };
 
-  const selectQuickAccount = (uname: string, defaultPass: string) => {
-    setUsername(uname);
-    setPassword(defaultPass);
-    setError('');
-  };
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
@@ -251,67 +245,36 @@ export default function Login({ onLoginSuccess }: LoginProps) {
             </div>
           </form>
 
-          <div className="mt-6 border-t border-slate-100 pt-6 space-y-4">
-            <div className="rounded-lg bg-slate-50 p-3.5 border border-slate-100 flex flex-col gap-2 text-xs text-slate-600">
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
-                <p className="font-bold text-slate-700">Pilih Akun Guru & Admin (Klik untuk Masuk Cepat):</p>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 mt-1">
-                {teachers.map((t) => {
-                  const plainPass = decryptPassword(t.passwordHash);
-                  return (
-                    <button
-                      key={t.id}
-                      type="button"
-                      onClick={() => selectQuickAccount(t.username, plainPass)}
-                      className="p-2 text-left bg-white hover:bg-blue-50/70 hover:border-blue-300 border border-slate-200 rounded-lg transition group cursor-pointer"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold text-slate-800 text-[11px] group-hover:text-blue-600">
-                          {t.name}
-                        </span>
-                        <span className={`text-[9px] px-1.5 py-0.5 rounded font-extrabold uppercase ${t.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
-                          {t.role}
-                        </span>
-                      </div>
-                      <p className="text-[10px] text-slate-500 mt-0.5">
-                        User: <code className="text-slate-700 font-mono font-semibold">{t.username}</code> | Pass: <code className="text-slate-700 font-mono">{plainPass}</code>
-                      </p>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Database Sync Button for Login Page */}
-            <div className="rounded-lg bg-emerald-50/50 p-3.5 border border-emerald-100/60 text-xs">
-              <div className="flex items-start gap-2.5 text-emerald-900">
-                <Database className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <p className="font-bold text-slate-800">Status Database Sekolah</p>
-                  <p className="mt-0.5 text-[11px] text-slate-500 leading-normal font-medium">
-                    Sistem database aktif dan tersinkronisasi otomatis untuk seluruh guru dan staf sekolah.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={handleSupabaseRefresh}
-                    disabled={isRefreshing}
-                    className="mt-3 w-full py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-lg text-[11px] flex items-center justify-center gap-2 transition disabled:bg-slate-300 disabled:cursor-not-allowed shadow-xs cursor-pointer"
-                  >
-                    <RefreshCw size={12} className={isRefreshing ? 'animate-spin' : ''} />
-                    {isRefreshing ? 'Menyinkronkan...' : 'Sinkronkan Data Sekarang'}
-                  </button>
-                </div>
-              </div>
+          <div className="mt-6 border-t border-slate-100 pt-5 space-y-4">
+            <div className="flex items-center justify-between text-xs text-slate-500">
+              <span className="flex items-center gap-1.5 font-medium text-slate-600">
+                <Database size={14} className="text-blue-500" />
+                Status Database
+              </span>
+              <button
+                type="button"
+                onClick={handleSupabaseRefresh}
+                disabled={isRefreshing}
+                className="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-800 font-semibold hover:underline disabled:opacity-50 transition cursor-pointer"
+                title="Sinkronkan data akun terbaru dari database cloud"
+              >
+                <RefreshCw size={12} className={isRefreshing ? 'animate-spin' : ''} />
+                {isRefreshing ? 'Menyinkronkan...' : 'Sinkronkan Akun'}
+              </button>
             </div>
 
             {refreshMessage && (
-              <div className={`p-3 rounded-lg text-xs font-bold leading-relaxed flex items-center gap-2 ${refreshError ? 'bg-red-50 text-red-700 border border-red-100' : 'bg-emerald-50 text-emerald-800 border border-emerald-200'}`}>
+              <div className={`p-2.5 rounded-lg text-xs font-medium flex items-center gap-2 ${refreshError ? 'bg-red-50 text-red-700 border border-red-100' : 'bg-emerald-50 text-emerald-800 border border-emerald-200'}`}>
                 {refreshError ? <AlertCircle size={14} className="text-red-500 shrink-0" /> : <CheckCircle2 size={14} className="text-emerald-500 shrink-0" />}
                 <span className="text-[11px] font-semibold">{refreshMessage}</span>
               </div>
             )}
+
+            <div className="rounded-lg bg-slate-50 p-3 border border-slate-100 text-center">
+              <p className="text-[11px] text-slate-500 leading-relaxed">
+                Gunakan nama pengguna & kata sandi resmi yang telah diberikan oleh pihak sekolah. Hubungi Administrator jika lupa kata sandi.
+              </p>
+            </div>
           </div>
         </div>
       </div>
