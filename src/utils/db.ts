@@ -375,6 +375,134 @@ class LocalDB {
     return { deletedCount: toDelete.length, remainingCount: remaining.length };
   }
 
+  upsertImportedStudents(imported: Array<Omit<Student, 'id'>>): { addedCount: number; updatedCount: number; totalCount: number } {
+    const currentStudents = this.getStudents();
+    const resultList: Student[] = [...currentStudents];
+    let addedCount = 0;
+    let updatedCount = 0;
+
+    for (const item of imported) {
+      const cleanNis = (item.nis || '').trim().toLowerCase();
+      const cleanNisn = (item.nisn || '').trim().toLowerCase();
+      const cleanName = (item.name || '').trim().toLowerCase();
+      const classId = item.classId;
+
+      // Find match in resultList
+      const matchIdx = resultList.findIndex((s) => {
+        const sNis = (s.nis || '').trim().toLowerCase();
+        const sNisn = (s.nisn || '').trim().toLowerCase();
+        const sName = (s.name || '').trim().toLowerCase();
+
+        // 1. Match by NIS or NISN if available
+        if (cleanNis && sNis && cleanNis === sNis) return true;
+        if (cleanNis && sNisn && cleanNis === sNisn) return true;
+        if (cleanNisn && sNisn && cleanNisn === sNisn) return true;
+        if (cleanNisn && sNis && cleanNisn === sNis) return true;
+
+        // 2. Match by exact name and class
+        if (cleanName && sName && cleanName === sName && s.classId === classId) return true;
+
+        return false;
+      });
+
+      if (matchIdx !== -1) {
+        // Update existing record, retain ID and any existing profile details
+        const existing = resultList[matchIdx];
+        resultList[matchIdx] = {
+          ...existing,
+          nis: item.nis || existing.nis,
+          nisn: item.nisn || existing.nisn,
+          name: item.name || existing.name,
+          gender: item.gender || existing.gender,
+          classId: item.classId || existing.classId,
+          birthPlace: existing.birthPlace || item.birthPlace || '',
+          birthDate: existing.birthDate || item.birthDate || '',
+        };
+        updatedCount++;
+      } else {
+        // Add as a new student
+        const uniqueId = `std-${Date.now()}-${Math.floor(Math.random() * 10000)}-${resultList.length + 1}`;
+        resultList.push({
+          ...item,
+          id: uniqueId,
+        });
+        addedCount++;
+      }
+    }
+
+    this.saveStudents(resultList);
+    return { addedCount, updatedCount, totalCount: resultList.length };
+  }
+
+  cleanDuplicateStudents(): { removedCount: number; mergedGroupsCount: number; remainingCount: number } {
+    const all = this.getStudents();
+    const seenMap = new Map<string, Student>();
+    const duplicatesToRemove: Student[] = [];
+    const idRedirectMap = new Map<string, string>();
+
+    for (const s of all) {
+      const cleanNis = (s.nis || '').trim().toLowerCase();
+      const cleanName = (s.name || '').trim().toLowerCase();
+      const key = cleanNis ? `nis:${cleanNis}` : `nc:${cleanName}:${s.classId}`;
+
+      if (seenMap.has(key)) {
+        const primary = seenMap.get(key)!;
+        duplicatesToRemove.push(s);
+        idRedirectMap.set(s.id, primary.id);
+      } else {
+        seenMap.set(key, s);
+      }
+    }
+
+    if (duplicatesToRemove.length === 0) {
+      return { removedCount: 0, mergedGroupsCount: 0, remainingCount: all.length };
+    }
+
+    const uniqueStudents = Array.from(seenMap.values());
+    this.saveStudents(uniqueStudents);
+
+    // Redirect attendances of duplicate students to primary student
+    const attendances = this.getAttendance();
+    let attChanged = false;
+    const updatedAttendances = attendances.map((a) => {
+      if (idRedirectMap.has(a.studentId)) {
+        attChanged = true;
+        return {
+          ...a,
+          studentId: idRedirectMap.get(a.studentId)!,
+        };
+      }
+      return a;
+    });
+
+    if (attChanged) {
+      this.saveAttendance(updatedAttendances);
+    }
+
+    // Delete duplicate student IDs from Supabase
+    const removedIds = duplicatesToRemove.map((s) => s.id);
+    deleteMultipleFromSupabase('students', removedIds);
+
+    // Update server cache
+    fetch('/api/db', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-sync-source': 'internal-sync'
+      },
+      body: JSON.stringify({
+        students: uniqueStudents,
+        attendance: updatedAttendances
+      })
+    }).catch(() => {});
+
+    return {
+      removedCount: duplicatesToRemove.length,
+      mergedGroupsCount: idRedirectMap.size,
+      remainingCount: uniqueStudents.length
+    };
+  }
+
   // HOLIDAYS
   getHolidays(): Holiday[] {
     return JSON.parse(localStorage.getItem(KEYS.HOLIDAYS) || '[]');

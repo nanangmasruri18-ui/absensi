@@ -4,20 +4,25 @@ import { Student, Attendance, ClassRombel, Gender } from '../types';
 /**
  * Downloads a standardized Excel template for student enrollment
  */
+/**
+ * Downloads a standardized Excel template for student enrollment with separate NIS and NISN columns
+ */
 export function downloadStudentTemplate() {
   const headers = [
     ['TEMPLATE DATA SISWA SD'],
     ['Petunjuk Pengisian:'],
-    ['1. Kolom NIS/NISN harus diisi angka.'],
-    ['2. Kolom Jenis Kelamin harus diisi L atau P (L = Laki-laki, P = Perempuan).'],
-    ['3. Kolom Kelas harus diisi sesuai Nama Kelas yang terdaftar di sistem. Contoh kelas: Kelas 1A, Kelas 1B, Kelas 2A'],
+    ['1. Kolom NIS diisi Nomor Induk Siswa di sekolah (contoh: 1011).'],
+    ['2. Kolom NISN diisi Nomor Induk Siswa Nasional (contoh: 0035482330).'],
+    ['3. Kolom Nama Siswa diisi Nama Lengkap Siswa.'],
+    ['4. Kolom Jenis Kelamin harus diisi L atau P (L = Laki-laki, P = Perempuan).'],
+    ['5. Kolom Kelas harus diisi sesuai Nama Kelas yang terdaftar di sistem. Contoh kelas: Kelas 1A, Kelas 1B, Kelas 2A.'],
     [''], // blank line
-    ['NIS/NISN', 'Nama Siswa', 'Jenis Kelamin', 'Kelas']
+    ['NIS', 'NISN', 'Nama Siswa', 'Jenis Kelamin', 'Kelas']
   ];
 
   const sampleData = [
-    ['1011', 'Andi Hermawan', 'L', 'Kelas 1A'],
-    ['2011', 'Siti Rahayu', 'P', 'Kelas 1B']
+    ['1011', '0035482330', 'Andi Hermawan', 'L', 'Kelas 1A'],
+    ['2011', '0035482331', 'Siti Rahayu', 'P', 'Kelas 1B']
   ];
 
   const wsData = [...headers, ...sampleData];
@@ -26,10 +31,11 @@ export function downloadStudentTemplate() {
 
   // Set widths
   const wscols = [
-    { wch: 15 },
-    { wch: 30 },
-    { wch: 15 },
-    { wch: 15 }
+    { wch: 14 }, // NIS
+    { wch: 16 }, // NISN
+    { wch: 30 }, // Nama Siswa
+    { wch: 15 }, // Jenis Kelamin
+    { wch: 15 }  // Kelas
   ];
   ws['!cols'] = wscols;
 
@@ -41,10 +47,12 @@ export interface ExcelImportResult {
   valid: boolean;
   errors: string[];
   students: Array<Omit<Student, 'id'>>;
+  duplicateInFileCount?: number;
 }
 
 /**
  * Reads and validates student records from an uploaded Excel file
+ * Supports separate NIS and NISN columns, as well as legacy 4-column format.
  */
 export function parseAndValidateStudentExcel(
   file: File,
@@ -63,26 +71,88 @@ export function parseAndValidateStudentExcel(
         const rows = XLSX.utils.sheet_to_json<any[]>(worksheet, { header: 1 });
         const errors: string[] = [];
         const students: Array<Omit<Student, 'id'>> = [];
+        const seenInFile = new Set<string>();
+        let duplicateInFileCount = 0;
 
         // Find the header row (typically has columns we specified)
         let headerIndex = -1;
+        let nisColIdx = -1;
+        let nisnColIdx = -1;
+        let nameColIdx = -1;
+        let genderColIdx = -1;
+        let classColIdx = -1;
+
         for (let i = 0; i < rows.length; i++) {
           const r = rows[i];
-          if (r && r.length >= 4) {
-            const matchNis = String(r[0] || '').toLowerCase().includes('nis');
-            const matchName = String(r[1] || '').toLowerCase().includes('nama');
-            if (matchNis && matchName) {
-              headerIndex = i;
-              break;
+          if (!r || r.length < 3) continue;
+
+          // Check for headers in this row
+          let foundName = false;
+          let foundNisOrNisn = false;
+
+          for (let c = 0; c < r.length; c++) {
+            const rawHeader = String(r[c] || '').trim().toLowerCase();
+            if (rawHeader === 'nis') {
+              nisColIdx = c;
+              foundNisOrNisn = true;
+            } else if (rawHeader.includes('nisn')) {
+              nisnColIdx = c;
+              foundNisOrNisn = true;
+            } else if (rawHeader.includes('nis/nisn') || rawHeader.includes('nis / nisn')) {
+              nisColIdx = c;
+              nisnColIdx = c;
+              foundNisOrNisn = true;
+            } else if (rawHeader.includes('nama')) {
+              nameColIdx = c;
+              foundName = true;
+            } else if (rawHeader.includes('jenis kelamin') || rawHeader === 'jk' || rawHeader === 'gender' || rawHeader === 'l/p') {
+              genderColIdx = c;
+            } else if (rawHeader.includes('kelas') || rawHeader.includes('rombel')) {
+              classColIdx = c;
             }
+          }
+
+          if (foundName && foundNisOrNisn) {
+            headerIndex = i;
+            break;
           }
         }
 
-        if (headerIndex === -1) {
+        // Fallback default column mapping if headerIndex found but some indexes weren't matched
+        if (headerIndex !== -1) {
+          const headerRow = rows[headerIndex];
+          if (nameColIdx === -1) {
+            // Find column with 'nama'
+            nameColIdx = headerRow.findIndex((col: any) => String(col || '').toLowerCase().includes('nama'));
+          }
+          if (genderColIdx === -1) {
+            genderColIdx = headerRow.findIndex((col: any) => {
+              const str = String(col || '').toLowerCase();
+              return str.includes('kelamin') || str.includes('l/p') || str === 'jk';
+            });
+          }
+          if (classColIdx === -1) {
+            classColIdx = headerRow.findIndex((col: any) => {
+              const str = String(col || '').toLowerCase();
+              return str.includes('kelas') || str.includes('rombel');
+            });
+          }
+
+          // If NIS and NISN columns are still unresolved:
+          if (nisColIdx === -1 && nisnColIdx !== -1) nisColIdx = nisnColIdx;
+          if (nisnColIdx === -1 && nisColIdx !== -1) nisnColIdx = nisColIdx;
+          if (nisColIdx === -1 && nisnColIdx === -1) {
+            nisColIdx = 0;
+            nisnColIdx = headerRow.length >= 5 ? 1 : 0;
+          }
+        }
+
+        if (headerIndex === -1 || nameColIdx === -1) {
           resolve({
             valid: false,
-            errors: ['Format file Excel salah. Pastikan baris judul berisi: NIS/NISN, Nama Siswa, Jenis Kelamin, Kelas'],
-            students: []
+            errors: ['Format file Excel salah. Pastikan baris judul berisi kolom: NIS, NISN, Nama Siswa, Jenis Kelamin, Kelas'],
+            students: [],
+            duplicateInFileCount: 0
           });
           return;
         }
@@ -97,14 +167,15 @@ export function parseAndValidateStudentExcel(
           if (!hasValue) continue;
 
           const rowNum = i + 1;
-          const rawNis = String(row[0] || '').trim();
-          const name = String(row[1] || '').trim();
-          const rawGender = String(row[2] || '').trim().toUpperCase();
-          const rawClass = String(row[3] || '').trim();
+          const rawNis = nisColIdx !== -1 ? String(row[nisColIdx] || '').trim() : '';
+          const rawNisn = nisnColIdx !== -1 ? String(row[nisnColIdx] || '').trim() : '';
+          const name = nameColIdx !== -1 ? String(row[nameColIdx] || '').trim() : '';
+          const rawGender = genderColIdx !== -1 ? String(row[genderColIdx] || '').trim().toUpperCase() : '';
+          const rawClass = classColIdx !== -1 ? String(row[classColIdx] || '').trim() : '';
 
           // Validation
-          if (!rawNis) {
-            errors.push(`Baris ${rowNum}: NIS/NISN kosong.`);
+          if (!rawNis && !rawNisn) {
+            errors.push(`Baris ${rowNum}: Kolom NIS atau NISN harus terisi salah satu.`);
             continue;
           }
           if (!name) {
@@ -112,7 +183,7 @@ export function parseAndValidateStudentExcel(
             continue;
           }
           if (rawGender !== 'L' && rawGender !== 'P') {
-            errors.push(`Baris ${rowNum}: Jenis Kelamin [${rawGender}] harus "L" atau "P".`);
+            errors.push(`Baris ${rowNum}: Jenis Kelamin [${rawGender || 'Kosong'}] harus "L" atau "P".`);
             continue;
           }
 
@@ -126,10 +197,20 @@ export function parseAndValidateStudentExcel(
             continue;
           }
 
+          // Check for internal duplicate row within the file
+          const effectiveNis = rawNis || rawNisn;
+          const effectiveNisn = rawNisn || rawNis;
+          const rowKey = `${effectiveNis.toLowerCase()}::${effectiveNisn.toLowerCase()}::${name.toLowerCase()}::${matchedClass.id}`;
+          if (seenInFile.has(rowKey)) {
+            duplicateInFileCount++;
+            continue;
+          }
+          seenInFile.add(rowKey);
+
           if (errors.length === 0) {
             students.push({
-              nis: rawNis,
-              nisn: rawNis, // Use NIS for both if not separated
+              nis: rawNis || rawNisn,
+              nisn: rawNisn || rawNis,
               name,
               gender: rawGender as Gender,
               birthPlace: '',
@@ -142,7 +223,8 @@ export function parseAndValidateStudentExcel(
         resolve({
           valid: errors.length === 0,
           errors,
-          students
+          students,
+          duplicateInFileCount
         });
       } catch (err: any) {
         resolve({

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { db } from '../utils/db';
 import { Student, ClassRombel, Gender } from '../types';
 import { 
@@ -20,7 +20,9 @@ import {
   Download, 
   CheckCircle2, 
   ListRestart,
-  ShieldAlert
+  ShieldAlert,
+  CheckCheck,
+  Sparkles
 } from 'lucide-react';
 
 export default function DataSiswa() {
@@ -57,7 +59,7 @@ export default function DataSiswa() {
   const [deleteAllScope, setDeleteAllScope] = useState<'all' | 'class'>('all');
   const [confirmText, setConfirmText] = useState('');
   const [isDeletingAll, setIsDeletingAll] = useState(false);
-  const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' | 'info' } | null>(null);
 
   const [nis, setNis] = useState('');
   const [nisn, setNisn] = useState('');
@@ -74,6 +76,7 @@ export default function DataSiswa() {
   const [importErrors, setImportErrors] = useState<string[]>([]);
   const [importPreview, setImportPreview] = useState<Array<Omit<Student, 'id'>>>([]);
   const [importSuccessMsg, setImportSuccessMsg] = useState('');
+  const [importInternalDuplicateNote, setImportInternalDuplicateNote] = useState('');
 
   // Triggers
   const openAddModal = () => {
@@ -232,47 +235,110 @@ export default function DataSiswa() {
     setImportFile(file);
     setImportErrors([]);
     setImportPreview([]);
+    setImportInternalDuplicateNote('');
 
     const result = await parseAndValidateStudentExcel(file, classes);
     if (result.valid) {
       setImportPreview(result.students);
+      if (result.duplicateInFileCount && result.duplicateInFileCount > 0) {
+        setImportInternalDuplicateNote(
+          `${result.duplicateInFileCount} baris ganda di dalam file Excel telah disaring otomatis (hanya 1 data yang diambil).`
+        );
+      }
     } else {
       setImportErrors(result.errors);
     }
   };
 
+  const isStudentAlreadyRegistered = (pStudent: Omit<Student, 'id'>) => {
+    const pNis = (pStudent.nis || '').trim().toLowerCase();
+    const pNisn = (pStudent.nisn || '').trim().toLowerCase();
+    const pName = (pStudent.name || '').trim().toLowerCase();
+    return students.some((s) => {
+      const sNis = (s.nis || '').trim().toLowerCase();
+      const sNisn = (s.nisn || '').trim().toLowerCase();
+      const sName = (s.name || '').trim().toLowerCase();
+      if (pNis && sNis && pNis === sNis) return true;
+      if (pNis && sNisn && pNis === sNisn) return true;
+      if (pNisn && sNisn && pNisn === sNisn) return true;
+      if (pNisn && sNis && pNisn === sNis) return true;
+      if (pName && sName && pName === sName && s.classId === pStudent.classId) return true;
+      return false;
+    });
+  };
+
   const saveBulkImport = () => {
     if (importPreview.length === 0) return;
 
-    // Map previews to list with unique keys
-    const newStudents: Student[] = importPreview.map((item, index) => {
-      // Small randomized key addition
-      const uniqueSeed = Date.now() + index;
-      return {
-        ...item,
-        id: `std-bulk-${uniqueSeed}`
-      };
-    });
+    const res = db.upsertImportedStudents(importPreview);
+    setStudents(db.getStudents());
 
-    const mergeList = [...students, ...newStudents];
-    db.saveStudents(mergeList);
-    setStudents(mergeList);
-    
-    setImportSuccessMsg(`Sukses mengimpor ${newStudents.length} siswa secara massal!`);
+    let msg = `Sukses memproses ${importPreview.length} siswa: `;
+    if (res.addedCount > 0 && res.updatedCount > 0) {
+      msg += `${res.addedCount} siswa baru ditambahkan, ${res.updatedCount} siswa telah ada diperbarui (tidak ada duplikasi).`;
+    } else if (res.addedCount > 0) {
+      msg += `${res.addedCount} siswa baru berhasil ditambahkan!`;
+    } else {
+      msg += `seluruh ${res.updatedCount} siswa sudah terdaftar sebelumnya. Data diperbarui tanpa membuat duplikat!`;
+    }
+
+    setImportSuccessMsg(msg);
     setImportPreview([]);
     setImportFile(null);
+    setImportInternalDuplicateNote('');
+
+    setToastMessage({
+      text: `✓ ${msg}`,
+      type: 'success'
+    });
+    setTimeout(() => setToastMessage(null), 6000);
 
     setTimeout(() => {
       setImportSuccessMsg('');
       setIsImportOpen(false);
-    }, 2500);
+    }, 2800);
   };
 
   const cancelImport = () => {
     setImportFile(null);
     setImportErrors([]);
     setImportPreview([]);
+    setImportInternalDuplicateNote('');
     setIsImportOpen(false);
+  };
+
+  // Detect and count duplicate students in current local database
+  const duplicateStudentsCount = useMemo(() => {
+    const seen = new Set<string>();
+    let dupCount = 0;
+    for (const s of students) {
+      const cleanNis = (s.nis || '').trim().toLowerCase();
+      const cleanName = (s.name || '').trim().toLowerCase();
+      const key = cleanNis ? `nis:${cleanNis}` : `nc:${cleanName}:${s.classId}`;
+      if (seen.has(key)) {
+        dupCount++;
+      } else {
+        seen.add(key);
+      }
+    }
+    return dupCount;
+  }, [students]);
+
+  const handleCleanDuplicates = () => {
+    const res = db.cleanDuplicateStudents();
+    setStudents(db.getStudents());
+    if (res.removedCount > 0) {
+      setToastMessage({
+        text: `✓ Berhasil membersihkan ${res.removedCount} data siswa ganda! Riwayat absensi tetap aman dan diselaraskan.`,
+        type: 'success'
+      });
+    } else {
+      setToastMessage({
+        text: 'Tidak ditemukan data siswa ganda. Seluruh data siswa sudah unik.',
+        type: 'info'
+      });
+    }
+    setTimeout(() => setToastMessage(null), 5000);
   };
 
   const getClassName = (cId: string) => {
@@ -349,11 +415,15 @@ export default function DataSiswa() {
         <div className={`mt-4 p-3 rounded-xl border text-xs font-bold flex items-center justify-between gap-3 animate-fade-in ${
           toastMessage.type === 'success' 
             ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
+            : toastMessage.type === 'info'
+            ? 'bg-blue-50 text-blue-800 border-blue-200'
             : 'bg-red-50 text-red-800 border-red-200'
         }`}>
           <div className="flex items-center gap-2">
             {toastMessage.type === 'success' ? (
               <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
+            ) : toastMessage.type === 'info' ? (
+              <CheckCircle2 size={16} className="text-blue-600 shrink-0" />
             ) : (
               <AlertCircle size={16} className="text-red-600 shrink-0" />
             )}
@@ -365,6 +435,32 @@ export default function DataSiswa() {
             className="p-1 text-slate-400 hover:text-slate-600 rounded transition"
           >
             <X size={14} />
+          </button>
+        </div>
+      )}
+
+      {/* Terdeteksi Duplikat Banner */}
+      {duplicateStudentsCount > 0 && (
+        <div className="mt-4 p-3.5 bg-amber-50/90 border border-amber-200 rounded-xl text-amber-900 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fade-in">
+          <div className="flex items-start sm:items-center gap-2.5">
+            <AlertTriangle size={18} className="text-amber-600 shrink-0 mt-0.5 sm:mt-0" />
+            <div>
+              <p className="font-bold text-amber-900">
+                Terdeteksi {duplicateStudentsCount} Data Siswa Ganda di Database
+              </p>
+              <p className="text-[11px] text-amber-700 font-medium">
+                Ditemukan baris data siswa dengan NIS atau Nama & Rombel yang identik (misal akibat impor ganda sebelumnya).
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleCleanDuplicates}
+            className="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 shrink-0 shadow-xs cursor-pointer"
+            id="clean-duplicates-btn"
+          >
+            <Sparkles size={13} />
+            Bersihkan & Satukan Duplikat
           </button>
         </div>
       )}
@@ -623,7 +719,7 @@ export default function DataSiswa() {
 
             <div className="mt-4 flex-1 overflow-y-auto space-y-4 pr-1">
               <p className="text-xs text-slate-500 font-semibold leading-relaxed">
-                Silahkan unggah file absensi mentah siswa format .xlsx. Sistem akan memvalidasi NIS, kesesuaian rombel baru di kelas terdaftar, dan format tanggal lahir secara ketat.
+                Silahkan unggah berkas data siswa format .xlsx. Format tabel impor kini memisahkan kolom <strong>NIS</strong> dan <strong>NISN</strong>, <strong>Nama Siswa</strong>, <strong>Jenis Kelamin (L/P)</strong>, dan <strong>Kelas Rombel</strong>.
               </p>
 
               {/* Upload Drag Target */}
@@ -676,32 +772,79 @@ export default function DataSiswa() {
                 </div>
               )}
 
+              {/* Internal duplicate notification within uploaded file */}
+              {importInternalDuplicateNote && (
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs flex items-center gap-2 font-semibold">
+                  <AlertTriangle size={15} className="text-amber-600 shrink-0" />
+                  <span>{importInternalDuplicateNote}</span>
+                </div>
+              )}
+
               {/* Roster preview */}
               {importPreview.length > 0 && (
                 <div className="space-y-2 font-sans">
-                  <h4 className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                    <CheckCircle2 size={14} className="text-green-500" />
-                    Preview Data Rombel Baru ({importPreview.length} Siswa Terdeteksi)
-                  </h4>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                    <h4 className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                      <CheckCircle2 size={14} className="text-emerald-500" />
+                      Pratinjau Data Impor ({importPreview.length} Siswa Teridentifikasi)
+                    </h4>
+                    <span className="text-[10px] text-slate-500 font-semibold">
+                      {importPreview.filter(s => isStudentAlreadyRegistered(s)).length > 0 && (
+                        <span className="text-blue-600 font-bold mr-2">
+                          • {importPreview.filter(s => isStudentAlreadyRegistered(s)).length} data akan diperbarui
+                        </span>
+                      )}
+                      <span className="text-emerald-600 font-bold">
+                        • {importPreview.filter(s => !isStudentAlreadyRegistered(s)).length} data baru
+                      </span>
+                    </span>
+                  </div>
+
+                  <div className="p-2.5 bg-blue-50/70 border border-blue-100 rounded-xl text-[11px] text-blue-900 flex items-start gap-2">
+                    <Sparkles size={14} className="text-blue-600 shrink-0 mt-0.5" />
+                    <span>
+                      <strong>Sistem Anti-Duplikasi Otomatis Aktif:</strong> Jika file ini diunggah ganda, sistem hanya akan memperbarui data yang cocok tanpa pernah menggandakan data siswa.
+                    </span>
+                  </div>
+
                   <div className="border border-slate-100 rounded-xl overflow-hidden max-h-[220px] overflow-y-auto">
                     <table className="w-full text-left text-[10px]">
                       <thead>
                         <tr className="bg-slate-50 font-bold text-slate-600 border-b border-slate-100 uppercase">
-                          <th className="py-2 px-3">NIS/NISN</th>
+                          <th className="py-2 px-3">NIS</th>
+                          <th className="py-2 px-3">NISN</th>
                           <th className="py-2 px-3">Nama Siswa</th>
-                          <th className="py-2 px-3 text-center">G</th>
+                          <th className="py-2 px-3 text-center">L/P</th>
                           <th className="py-2 px-3">Kategori Kelas</th>
+                          <th className="py-2 px-3 text-right">Status Sistem</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 text-slate-700">
-                        {importPreview.map((s, idx) => (
-                          <tr key={idx}>
-                            <td className="py-2 px-3 font-mono">{s.nis}</td>
-                            <td className="py-2 px-3 font-bold text-slate-800">{s.name}</td>
-                            <td className="py-2 px-3 text-center font-bold text-slate-600">{s.gender}</td>
-                            <td className="py-2 px-3 font-bold text-blue-600">{getClassName(s.classId)}</td>
-                          </tr>
-                        ))}
+                        {importPreview.map((s, idx) => {
+                          const alreadyIn = isStudentAlreadyRegistered(s);
+                          return (
+                            <tr key={idx} className={alreadyIn ? "bg-blue-50/25" : ""}>
+                              <td className="py-2 px-3 font-mono font-bold text-slate-800">{s.nis || '-'}</td>
+                              <td className="py-2 px-3 font-mono text-slate-600">{s.nisn || '-'}</td>
+                              <td className="py-2 px-3 font-bold text-slate-800">{s.name}</td>
+                              <td className="py-2 px-3 text-center font-bold text-slate-600">{s.gender}</td>
+                              <td className="py-2 px-3 font-bold text-blue-600">{getClassName(s.classId)}</td>
+                              <td className="py-2 px-3 text-right">
+                                {alreadyIn ? (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-blue-100 text-blue-800">
+                                    <CheckCheck size={10} />
+                                    Sudah Ada (Perbarui)
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-100 text-emerald-800">
+                                    <Plus size={10} />
+                                    Siswa Baru
+                                  </span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
