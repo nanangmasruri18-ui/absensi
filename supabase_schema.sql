@@ -58,6 +58,7 @@ create table if not exists public.holidays (
   id text primary key,
   date text not null,
   name text not null,
+  description text default '',
   updated_at timestamptz default now()
 );
 

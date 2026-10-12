@@ -1,7 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../utils/db';
 import { SchoolProfile, ClassRombel, Teacher, Student } from '../types';
-import { fetchAllFromSupabase, getSupabaseStatus, checkSupabaseTables, SupabaseStatusInfo } from '../utils/supabase';
+import { 
+  fetchAllFromSupabase, 
+  getSupabaseStatus, 
+  checkSupabaseTables, 
+  SupabaseStatusInfo,
+  reinitializeSupabaseClient,
+  uploadAllDataToSupabase,
+  getActiveCredentials
+} from '../utils/supabase';
 import { 
   Building2, 
   Users, 
@@ -21,20 +29,34 @@ import {
   Check,
   ExternalLink,
   Code2,
-  X
+  X,
+  Key,
+  Globe,
+  UploadCloud,
+  BookOpen,
+  Sparkles,
+  AlertTriangle
 } from 'lucide-react';
 
-const SQL_SCHEMA_STRING = `-- SKRIP SETUP DATABASE SUPABASE UNTUK APLIKASI ABSENSI SISWA SD
--- Salin dan jalankan seluruh isi skrip ini di Supabase SQL Editor:
+const SQL_SCHEMA_STRING = `-- ====================================================================
+-- SKRIP SETUP DATABASE SUPABASE UNTUK APLIKASI ABSENSI SISWA SD
+-- ====================================================================
+-- 1. Buka dashboard Supabase Anda: https://supabase.com/dashboard
+-- 2. Pilih project Anda -> Masuk menu "SQL Editor"
+-- 3. Buat query baru, tempel seluruh kode ini, lalu klik "RUN"
+-- ====================================================================
+
+-- 1. Tabel Profil Sekolah
 create table if not exists public.school (
   id text primary key default 'school-1',
-  name text not null default 'SD Negeri Gelora 01',
-  address text default 'Jl. Pemuda No. 45, Kel. Gelora, Kec. Tanah Abang, Kota Jakarta Pusat, DKI Jakarta',
-  npsn text default '20103456',
+  name text not null default 'SDN 005 Gelora',
+  address text default 'Jl. Kayangan, No. 348/C Gelora',
+  npsn text default '10405436',
   admin_name text default 'Admin Gelora',
   updated_at timestamptz default now()
 );
 
+-- 2. Tabel Rombongan Belajar (Rombel / Kelas)
 create table if not exists public.classes (
   id text primary key,
   name text not null,
@@ -43,6 +65,7 @@ create table if not exists public.classes (
   updated_at timestamptz default now()
 );
 
+-- 3. Tabel Guru & Admin
 create table if not exists public.teachers (
   id text primary key,
   nip text default '',
@@ -55,6 +78,7 @@ create table if not exists public.teachers (
   updated_at timestamptz default now()
 );
 
+-- 4. Tabel Siswa
 create table if not exists public.students (
   id text primary key,
   nis text default '',
@@ -67,13 +91,16 @@ create table if not exists public.students (
   updated_at timestamptz default now()
 );
 
+-- 5. Tabel Hari Libur Kalender Pendidikan
 create table if not exists public.holidays (
   id text primary key,
   date text not null,
   name text not null,
+  description text default '',
   updated_at timestamptz default now()
 );
 
+-- 6. Tabel Presensi / Absensi Harian Siswa
 create table if not exists public.attendance (
   id text primary key,
   class_id text not null,
@@ -84,6 +111,12 @@ create table if not exists public.attendance (
   updated_at timestamptz default now()
 );
 
+-- Indexing untuk pencarian cepat
+create index if not exists idx_attendance_class_date on public.attendance (class_id, date);
+create index if not exists idx_attendance_date on public.attendance (date);
+create index if not exists idx_students_class on public.students (class_id);
+
+-- Aktifkan Row Level Security (RLS)
 alter table public.school enable row level security;
 alter table public.classes enable row level security;
 alter table public.teachers enable row level security;
@@ -91,14 +124,35 @@ alter table public.students enable row level security;
 alter table public.holidays enable row level security;
 alter table public.attendance enable row level security;
 
-create policy "Akses anon school" on public.school for all using (true) with check (true);
-create policy "Akses anon classes" on public.classes for all using (true) with check (true);
-create policy "Akses anon teachers" on public.teachers for all using (true) with check (true);
-create policy "Akses anon students" on public.students for all using (true) with check (true);
-create policy "Akses anon holidays" on public.holidays for all using (true) with check (true);
-create policy "Akses anon attendance" on public.attendance for all using (true) with check (true);
+-- Kebijakan Akses (Policy) Publik agar aplikasi web dan mobile dapat membaca & menyimpan data
+drop policy if exists "Akses penuh anon school" on public.school;
+create policy "Akses penuh anon school" on public.school for all using (true) with check (true);
 
-alter publication supabase_realtime add table public.attendance;`;
+drop policy if exists "Akses penuh anon classes" on public.classes;
+create policy "Akses penuh anon classes" on public.classes for all using (true) with check (true);
+
+drop policy if exists "Akses penuh anon teachers" on public.teachers;
+create policy "Akses penuh anon teachers" on public.teachers for all using (true) with check (true);
+
+drop policy if exists "Akses penuh anon students" on public.students;
+create policy "Akses penuh anon students" on public.students for all using (true) with check (true);
+
+drop policy if exists "Akses penuh anon holidays" on public.holidays;
+create policy "Akses penuh anon holidays" on public.holidays for all using (true) with check (true);
+
+drop policy if exists "Akses penuh anon attendance" on public.attendance;
+create policy "Akses penuh anon attendance" on public.attendance for all using (true) with check (true);
+
+-- Aktifkan Supabase Realtime Publication
+do $$
+begin
+  begin alter publication supabase_realtime add table public.attendance; exception when others then null; end;
+  begin alter publication supabase_realtime add table public.students; exception when others then null; end;
+  begin alter publication supabase_realtime add table public.classes; exception when others then null; end;
+  begin alter publication supabase_realtime add table public.teachers; exception when others then null; end;
+  begin alter publication supabase_realtime add table public.holidays; exception when others then null; end;
+  begin alter publication supabase_realtime add table public.school; exception when others then null; end;
+end $$;`;
 
 export default function AdminDashboard() {
   const [school, setSchool] = useState<SchoolProfile>(db.getSchool());
@@ -111,10 +165,24 @@ export default function AdminDashboard() {
   const [refreshMessage, setRefreshMessage] = useState('');
   const [refreshError, setRefreshError] = useState(false);
 
-  // Supabase Status and SQL modal
+  // Supabase Status and modal
   const [sbStatus, setSbStatus] = useState<SupabaseStatusInfo>(getSupabaseStatus());
   const [showSqlModal, setShowSqlModal] = useState(false);
+  const [modalTab, setModalTab] = useState<'guide' | 'sql' | 'credentials'>('guide');
   const [copiedSql, setCopiedSql] = useState(false);
+
+  // Credentials state
+  const currentCreds = getActiveCredentials();
+  const [customUrl, setCustomUrl] = useState(currentCreds.url);
+  const [customKey, setCustomKey] = useState(currentCreds.key);
+  const [saveCredMessage, setSaveCredMessage] = useState('');
+  const [saveCredError, setSaveCredError] = useState(false);
+  const [isSavingCred, setIsSavingCred] = useState(false);
+
+  // Upload all state
+  const [isUploadingAll, setIsUploadingAll] = useState(false);
+  const [uploadMessage, setUploadMessage] = useState('');
+  const [uploadError, setUploadError] = useState(false);
 
   const reloadData = () => {
     setSchool(db.getSchool());
@@ -183,6 +251,65 @@ export default function AdminDashboard() {
       setTimeout(() => setCopiedSql(false), 3000);
     } catch (e) {
       // Fallback
+    }
+  };
+
+  const handleSaveCredentials = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setIsSavingCred(true);
+    setSaveCredError(false);
+    setSaveCredMessage('Memeriksa koneksi ke Supabase...');
+
+    try {
+      reinitializeSupabaseClient(customUrl, customKey);
+      const isSbReady = await checkSupabaseTables();
+      const status = getSupabaseStatus();
+      setSbStatus(status);
+
+      if (isSbReady) {
+        setSaveCredMessage('✓ Berhasil terhubung ke Supabase Cloud dan seluruh tabel siap digunakan!');
+        setTimeout(() => setSaveCredMessage(''), 4000);
+      } else {
+        setSaveCredError(true);
+        if (status.errorMessage?.includes('does not exist') || status.errorMessage?.includes('attendance')) {
+          setSaveCredMessage('Terkoneksi ke server Supabase, tetapi tabel belum dibuat. Silakan buka tab "Skrip SQL" dan jalankan skrip di SQL Editor.');
+        } else {
+          setSaveCredMessage(status.errorMessage || 'Koneksi gagal atau kredensial URL / Key tidak valid.');
+        }
+      }
+    } catch (err: any) {
+      setSaveCredError(true);
+      setSaveCredMessage(err?.message || 'Gagal menghubungi server Supabase');
+    } finally {
+      setIsSavingCred(false);
+    }
+  };
+
+  const handleUploadAllToSupabase = async () => {
+    setIsUploadingAll(true);
+    setUploadError(false);
+    setUploadMessage('Sedang mengunggah seluruh profil sekolah, guru, rombel, siswa, dan absensi ke Supabase baru...');
+
+    try {
+      const result = await uploadAllDataToSupabase();
+      if (result.success) {
+        setUploadError(false);
+        const c = result.counts;
+        setUploadMessage(
+          `✓ Sukses! Berhasil mengunggah ${c.classes || 0} rombel, ${c.teachers || 0} guru, ${c.students || 0} siswa, dan ${c.attendance || 0} catatan absensi ke database Supabase baru!`
+        );
+        const isSbReady = await checkSupabaseTables();
+        setSbStatus(getSupabaseStatus());
+        setTimeout(() => setUploadMessage(''), 5000);
+      } else {
+        setUploadError(true);
+        setUploadMessage(result.message);
+      }
+    } catch (err: any) {
+      setUploadError(true);
+      setUploadMessage(`Gagal mengunggah: ${err?.message || 'Error koneksi'}`);
+    } finally {
+      setIsUploadingAll(false);
     }
   };
 
@@ -268,60 +395,75 @@ export default function AdminDashboard() {
       <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-start sm:items-center gap-3">
-            <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
+            <div className={`p-2.5 rounded-xl ${sbStatus.isConfigured && sbStatus.isTablesReady ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
               <Database size={20} />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-xs font-bold text-slate-800">Sinkronisasi Database Cloud (Supabase & Multi-Browser)</h3>
-                {sbStatus.isConfigured && sbStatus.isTablesReady && (
-                  <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    Supabase Cloud Aktif
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="text-xs font-bold text-slate-800">Sinkronisasi Database Cloud (Supabase Cloud)</h3>
+                {sbStatus.isConfigured && sbStatus.isTablesReady ? (
+                  <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+                    <CheckCircle2 size={10} />
+                    Supabase Cloud Aktif & Siap
+                  </span>
+                ) : (
+                  <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1">
+                    <AlertTriangle size={10} />
+                    Perlu Setup Database Baru
                   </span>
                 )}
               </div>
               <p className="text-[11px] text-slate-500 font-medium mt-0.5">
-                Sinkronkan otomatis data absensi antar-guru, browser lain, handphone, dan laptop
+                Penyimpanan online terpusat agar absensi dari guru di HP/laptop lain tersimpan permanen dan real-time
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
             <button
-              onClick={() => setShowSqlModal(true)}
-              className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+              onClick={() => {
+                setModalTab('guide');
+                setShowSqlModal(true);
+              }}
+              className="px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer border border-indigo-200/60"
             >
-              <Code2 size={13} className="text-blue-600" />
-              <span>Panduan SQL Supabase</span>
+              <Sparkles size={13} className="text-indigo-600" />
+              <span>Petunjuk & Setup Supabase Baru</span>
             </button>
             <button
               onClick={handleSupabaseRefresh}
               disabled={isRefreshing}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-extrabold transition flex items-center justify-center gap-2 shadow-sm disabled:bg-slate-300 disabled:cursor-not-allowed cursor-pointer"
+              className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-extrabold transition flex items-center justify-center gap-2 shadow-sm disabled:bg-slate-300 disabled:cursor-not-allowed cursor-pointer"
             >
               <RefreshCw size={13} className={isRefreshing ? 'animate-spin' : ''} />
-              {isRefreshing ? 'Menyinkronkan...' : 'Sinkronkan Sekarang'}
+              {isRefreshing ? 'Memeriksa...' : 'Cek Status'}
             </button>
           </div>
         </div>
 
-        {/* Supabase status notice banner if SQL is not yet executed */}
-        {sbStatus.isConfigured && !sbStatus.isTablesReady && (
-          <div className="p-3.5 bg-amber-50 border border-amber-200/80 rounded-xl text-xs text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-            <div className="flex items-start gap-2">
-              <AlertCircle size={16} className="text-amber-600 shrink-0 mt-0.5" />
+        {/* Warning if disconnected or tables missing */}
+        {(!sbStatus.isConfigured || !sbStatus.isTablesReady) && (
+          <div className="p-3.5 bg-amber-50/80 border border-amber-200 rounded-xl text-xs text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-start gap-2.5">
+              <AlertCircle size={17} className="text-amber-600 shrink-0 mt-0.5" />
               <div>
-                <p className="font-bold">Project Supabase Terhubung, Skrip SQL Belum Dijalankan</p>
-                <p className="text-[11px] text-amber-700 mt-0.5">
-                  Agar absensi yang diinput guru di browser/HP lain langsung masuk otomatis, salin skrip SQL dan jalankan di SQL Editor Supabase Anda.
+                <p className="font-bold text-amber-950">Database Supabase Baru Belum Terhubung</p>
+                <p className="text-[11px] text-amber-800 mt-0.5 leading-relaxed">
+                  {sbStatus.errorMessage
+                    ? `Status saat ini: ${sbStatus.errorMessage}. `
+                    : 'Koneksi ke Supabase sebelumnya telah diputus/dihapus. '}
+                  Ikuti panduan mudah 5 langkah untuk membuat database baru di Supabase dan menghubungkannya ke aplikasi.
                 </p>
               </div>
             </div>
             <button
-              onClick={() => setShowSqlModal(true)}
-              className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-[11px] font-bold rounded-lg shrink-0 cursor-pointer shadow-xs"
+              onClick={() => {
+                setModalTab('guide');
+                setShowSqlModal(true);
+              }}
+              className="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-[11px] font-bold rounded-lg shrink-0 cursor-pointer shadow-xs transition"
             >
-              Buka Skrip SQL Setup
+              Buka Panduan Setup
             </button>
           </div>
         )}
@@ -492,57 +634,351 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* SQL Setup Modal */}
+      {/* SQL & Supabase Setup Multi-Tab Modal */}
       {showSqlModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-100 max-h-[90vh] flex flex-col">
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-fade-in">
+          <div className="bg-white rounded-2xl max-w-3xl w-full p-5 sm:p-6 shadow-2xl border border-slate-100 max-h-[92vh] flex flex-col">
+            {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl">
-                  <Database size={20} />
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
+                  <Database size={22} />
                 </div>
                 <div>
-                  <h3 className="text-sm sm:text-base font-bold text-slate-800">Skrip Database Supabase Cloud</h3>
-                  <p className="text-xs text-slate-500 font-medium">Aktifkan sinkronisasi otomatis antar-seluruh browser & perangkat</p>
+                  <h3 className="text-sm sm:text-base font-bold text-slate-800">
+                    Petunjuk & Setup Database Baru di Supabase
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium">
+                    Panduan lengkap membuat database baru agar data sekolah & absensi tersimpan permanen
+                  </p>
                 </div>
               </div>
               <button
                 onClick={() => setShowSqlModal(false)}
-                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 cursor-pointer"
+                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition cursor-pointer"
               >
-                <X size={18} />
+                <X size={20} />
               </button>
             </div>
 
-            <div className="space-y-3.5 text-xs text-slate-600 overflow-y-auto pr-1">
-              <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200/70 space-y-1.5 font-medium leading-relaxed">
-                <p className="font-bold text-slate-800">Langkah 1 Menit Menghubungkan:</p>
-                <p>1. Buka <strong>Supabase Dashboard</strong> Anda di menu <strong>SQL Editor</strong>.</p>
-                <p>2. Klik tombol <strong>"Salin Skrip SQL"</strong> di bawah.</p>
-                <p>3. Tempelkan (*paste*) di SQL Editor Supabase, lalu klik <strong>RUN</strong>.</p>
-                <p>4. Selesai! Seluruh data absensi dari guru di browser/HP mana pun akan otomatis tersinkronisasi.</p>
-              </div>
-
-              <div className="relative">
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Skrip SQL Supabase:</span>
-                  <button
-                    onClick={copySqlToClipboard}
-                    className="flex items-center gap-1.5 px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition shadow-xs cursor-pointer"
-                  >
-                    {copiedSql ? <Check size={13} className="text-emerald-200" /> : <Copy size={13} />}
-                    <span>{copiedSql ? 'Berhasil Disalin!' : 'Salin Skrip SQL'}</span>
-                  </button>
-                </div>
-                <pre className="bg-slate-900 text-slate-200 p-3.5 rounded-xl text-[11px] font-mono h-48 overflow-y-auto leading-relaxed border border-slate-800">
-                  {SQL_SCHEMA_STRING}
-                </pre>
-              </div>
+            {/* Navigation Tabs */}
+            <div className="flex items-center gap-1 sm:gap-2 border-b border-slate-200 mb-4 pb-2 overflow-x-auto">
+              <button
+                onClick={() => setModalTab('guide')}
+                className={`px-3 sm:px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer whitespace-nowrap ${
+                  modalTab === 'guide'
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                <BookOpen size={14} />
+                <span>1. Panduan Langkah Demi Langkah</span>
+              </button>
+              <button
+                onClick={() => setModalTab('sql')}
+                className={`px-3 sm:px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer whitespace-nowrap ${
+                  modalTab === 'sql'
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                <Code2 size={14} />
+                <span>2. Skrip SQL Lengkap</span>
+              </button>
+              <button
+                onClick={() => setModalTab('credentials')}
+                className={`px-3 sm:px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer whitespace-nowrap ${
+                  modalTab === 'credentials'
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                <Key size={14} />
+                <span>3. Sambungkan URL & Kunci API</span>
+              </button>
             </div>
 
-            <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between">
-              <span className="text-[11px] text-slate-400 font-medium">
-                URL Supabase: {sbStatus.url || 'https://rdsptjslgnjyzizmioru.supabase.co'}
+            {/* Tab 1: Step by step Guide */}
+            {modalTab === 'guide' && (
+              <div className="space-y-4 text-xs text-slate-600 overflow-y-auto pr-1 flex-1 leading-relaxed">
+                <div className="bg-blue-50/70 p-4 rounded-xl border border-blue-100 text-blue-900 font-medium">
+                  <p className="font-bold text-sm text-blue-950 mb-1 flex items-center gap-2">
+                    <Sparkles size={16} className="text-blue-600" />
+                    Cara Menghubungkan Supabase Baru (Estimasi 2-3 Menit)
+                  </p>
+                  <p className="text-xs text-blue-800">
+                    Dengan membuat project baru di Supabase, data sekolah, akun guru, rombel, siswa, dan seluruh catatan absensi akan tersimpan online secara real-time dan tidak akan hilang meskipun browser dibersihkan atau perangkat dimatikan.
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  {/* Step 1 */}
+                  <div className="p-3.5 bg-slate-50 border border-slate-200/80 rounded-xl space-y-1">
+                    <div className="flex items-center gap-2 font-bold text-slate-800 text-xs">
+                      <span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] shrink-0 font-extrabold">1</span>
+                      <span>Buat Project Baru di Supabase Dashboard</span>
+                    </div>
+                    <p className="pl-7 text-slate-600">
+                      Buka{' '}
+                      <a
+                        href="https://supabase.com/dashboard"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-blue-600 font-bold underline inline-flex items-center gap-1"
+                      >
+                        supabase.com/dashboard <ExternalLink size={11} />
+                      </a>
+                      , masuk ke akun Anda, lalu klik tombol <strong>"New Project"</strong>.
+                    </p>
+                    <ul className="pl-11 list-disc text-slate-600 space-y-0.5 mt-1">
+                      <li><strong>Name:</strong> Beri nama project (contoh: <code className="bg-slate-200 px-1 py-0.5 rounded font-mono">absensi-sd</code>)</li>
+                      <li><strong>Database Password:</strong> Buat password yang kuat dan simpan password Anda</li>
+                      <li><strong>Region:</strong> Pilih <strong>Singapore (ap-southeast-1)</strong> untuk kecepatan akses optimal dari Indonesia</li>
+                      <li>Klik <strong>"Create new project"</strong> dan tunggu sekitar 1-2 menit hingga status database aktif.</li>
+                    </ul>
+                  </div>
+
+                  {/* Step 2 */}
+                  <div className="p-3.5 bg-slate-50 border border-slate-200/80 rounded-xl space-y-1">
+                    <div className="flex items-center gap-2 font-bold text-slate-800 text-xs">
+                      <span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] shrink-0 font-extrabold">2</span>
+                      <span>Ambil Project URL & API Key (anon / public)</span>
+                    </div>
+                    <p className="pl-7 text-slate-600">
+                      Di panel menu sebelah kiri dashboard Supabase Anda:
+                    </p>
+                    <ul className="pl-11 list-disc text-slate-600 space-y-0.5 mt-1">
+                      <li>Klik menu <strong>Project Settings</strong> (ikon roda gigi di kiri bawah).</li>
+                      <li>Klik submenu <strong>API</strong>.</li>
+                      <li>Salin <strong>Project URL</strong> (contoh: <code className="bg-slate-200 px-1 py-0.5 rounded font-mono">https://xxxxxxxxxxxxxxxx.supabase.co</code>).</li>
+                      <li>Salin <strong>anon public key</strong> (kunci token API publik).</li>
+                    </ul>
+                  </div>
+
+                  {/* Step 3 */}
+                  <div className="p-3.5 bg-slate-50 border border-slate-200/80 rounded-xl space-y-1">
+                    <div className="flex items-center gap-2 font-bold text-slate-800 text-xs">
+                      <span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] shrink-0 font-extrabold">3</span>
+                      <span>Jalankan Skrip SQL di SQL Editor</span>
+                    </div>
+                    <p className="pl-7 text-slate-600">
+                      Di panel menu kiri Supabase, klik <strong>SQL Editor</strong> &rarr; klik tombol <strong>"New query"</strong>.
+                    </p>
+                    <p className="pl-7 text-slate-600">
+                      Buka tab <strong>"2. Skrip SQL Lengkap"</strong> di atas jendela ini, klik <strong>"Salin Skrip SQL"</strong>, lalu tempelkan (paste) ke SQL Editor Supabase dan klik tombol hijau <strong>RUN</strong>.
+                    </p>
+                  </div>
+
+                  {/* Step 4 & 5 */}
+                  <div className="p-3.5 bg-slate-50 border border-slate-200/80 rounded-xl space-y-1">
+                    <div className="flex items-center gap-2 font-bold text-slate-800 text-xs">
+                      <span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] shrink-0 font-extrabold">4</span>
+                      <span>Hubungkan Kredensial & Unggah Data</span>
+                    </div>
+                    <p className="pl-7 text-slate-600">
+                      Buka tab <strong>"3. Sambungkan URL & Kunci API"</strong>, tempelkan Project URL dan Anon Key Anda, klik <strong>"Simpan & Hubungkan Database Baru"</strong>, kemudian klik tombol <strong>"Unggah Semua Data Saat Ini ke Supabase Baru"</strong>. Selesai!
+                    </p>
+                  </div>
+                </div>
+
+                <div className="pt-2 flex justify-end">
+                  <button
+                    onClick={() => setModalTab('sql')}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs"
+                  >
+                    <span>Lanjut ke Langkah 2: Salin Skrip SQL</span>
+                    <span>&rarr;</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Tab 2: SQL Script */}
+            {modalTab === 'sql' && (
+              <div className="space-y-3 text-xs text-slate-600 overflow-y-auto pr-1 flex-1 leading-relaxed">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                  <div>
+                    <p className="font-bold text-slate-800">Skrip Tabel, RLS Policy, dan Realtime</p>
+                    <p className="text-[11px] text-slate-500">Mencakup 6 tabel: school, classes, teachers, students, holidays, attendance</p>
+                  </div>
+                  <button
+                    onClick={copySqlToClipboard}
+                    className="flex items-center justify-center gap-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition shadow-xs cursor-pointer shrink-0"
+                  >
+                    {copiedSql ? <Check size={14} className="text-emerald-200" /> : <Copy size={14} />}
+                    <span>{copiedSql ? '✓ Berhasil Disalin!' : 'Salin Skrip SQL'}</span>
+                  </button>
+                </div>
+
+                <div className="relative">
+                  <pre className="bg-slate-900 text-slate-200 p-4 rounded-xl text-[11px] font-mono h-64 overflow-y-auto leading-relaxed border border-slate-800 select-all">
+                    {SQL_SCHEMA_STRING}
+                  </pre>
+                </div>
+
+                <div className="pt-2 flex items-center justify-between">
+                  <button
+                    onClick={() => setModalTab('guide')}
+                    className="px-3.5 py-2 text-slate-600 hover:text-slate-800 font-bold text-xs"
+                  >
+                    &larr; Kembali ke Panduan
+                  </button>
+                  <button
+                    onClick={() => setModalTab('credentials')}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs"
+                  >
+                    <span>Lanjut ke Langkah 3: Masukkan Kredensial</span>
+                    <span>&rarr;</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Tab 3: Credentials & Upload */}
+            {modalTab === 'credentials' && (
+              <div className="space-y-4 text-xs text-slate-600 overflow-y-auto pr-1 flex-1 leading-relaxed">
+                {/* Status Card */}
+                <div className={`p-4 rounded-xl border ${
+                  sbStatus.isConfigured && sbStatus.isTablesReady
+                    ? 'bg-emerald-50/70 border-emerald-200 text-emerald-900'
+                    : 'bg-amber-50/70 border-amber-200 text-amber-900'
+                }`}>
+                  <div className="flex items-center gap-2 font-bold text-xs">
+                    {sbStatus.isConfigured && sbStatus.isTablesReady ? (
+                      <>
+                        <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
+                        <span>Status: Supabase Cloud Terhubung & Tabel Siap Digunakan!</span>
+                      </>
+                    ) : (
+                      <>
+                        <AlertTriangle size={16} className="text-amber-600 shrink-0" />
+                        <span>Status: {sbStatus.errorMessage || 'Belum Terhubung / Tabel Belum Dibuat'}</span>
+                      </>
+                    )}
+                  </div>
+                  {sbStatus.url && (
+                    <p className="text-[11px] font-mono mt-1 opacity-80 break-all">
+                      URL Aktif: {sbStatus.url}
+                    </p>
+                  )}
+                </div>
+
+                {/* Form Input URL & Key */}
+                <form onSubmit={handleSaveCredentials} className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3.5">
+                  <h4 className="font-bold text-slate-800 text-xs flex items-center gap-2">
+                    <Key size={15} className="text-blue-600" />
+                    Masukkan Kredensial Project Supabase Baru Anda:
+                  </h4>
+
+                  <div>
+                    <label className="block text-slate-700 font-bold mb-1">
+                      Project URL (Supabase URL):
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="https://xxxxxxxxxxxxxxxx.supabase.co"
+                      value={customUrl}
+                      onChange={(e) => setCustomUrl(e.target.value)}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs font-mono text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    />
+                    <p className="text-[10px] text-slate-500 mt-0.5">
+                      Ditemukan di Supabase: Project Settings &rarr; API &rarr; Project URL
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-700 font-bold mb-1">
+                      Project API Key (anon / public):
+                    </label>
+                    <textarea
+                      required
+                      rows={2}
+                      placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                      value={customKey}
+                      onChange={(e) => setCustomKey(e.target.value)}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs font-mono text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 resize-none"
+                    />
+                    <p className="text-[10px] text-slate-500 mt-0.5">
+                      Ditemukan di Supabase: Project Settings &rarr; API &rarr; Project API keys (anon public)
+                    </p>
+                  </div>
+
+                  {saveCredMessage && (
+                    <div className={`p-3 rounded-lg font-bold text-xs flex items-center gap-2 ${
+                      saveCredError ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                    }`}>
+                      {saveCredError ? <AlertCircle size={15} /> : <CheckCircle2 size={15} />}
+                      <span>{saveCredMessage}</span>
+                    </div>
+                  )}
+
+                  <div className="pt-1 flex items-center justify-between">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCustomUrl('');
+                        setCustomKey('');
+                        reinitializeSupabaseClient('', '');
+                        setSbStatus(getSupabaseStatus());
+                      }}
+                      className="text-xs text-slate-400 hover:text-slate-600 underline font-medium cursor-pointer"
+                    >
+                      Kosongkan Kredensial
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isSavingCred}
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-2 shadow-xs cursor-pointer disabled:bg-slate-300"
+                    >
+                      {isSavingCred ? <RefreshCw size={13} className="animate-spin" /> : <Check size={13} />}
+                      <span>{isSavingCred ? 'Memeriksa...' : 'Simpan & Hubungkan Database Baru'}</span>
+                    </button>
+                  </div>
+                </form>
+
+                {/* Upload Current Data Action */}
+                <div className="p-4 bg-indigo-50/60 border border-indigo-100 rounded-xl space-y-2.5">
+                  <div className="flex items-start gap-2.5">
+                    <UploadCloud size={20} className="text-indigo-600 shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="font-bold text-indigo-950 text-xs">
+                        Inisialisasi: Unggah Data Saat Ini ke Supabase Baru
+                      </h4>
+                      <p className="text-[11px] text-indigo-800 mt-0.5 leading-relaxed">
+                        Setelah database Supabase baru dibuat dan skrip SQL dijalankan, klik tombol di bawah agar seluruh data profil sekolah, guru, kelas, siswa, dan absensi yang ada saat ini langsung tersimpan ke Supabase baru.
+                      </p>
+                    </div>
+                  </div>
+
+                  {uploadMessage && (
+                    <div className={`p-3 rounded-lg font-bold text-xs flex items-center gap-2 ${
+                      uploadError ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                    }`}>
+                      {uploadError ? <AlertCircle size={15} /> : <CheckCircle2 size={15} />}
+                      <span>{uploadMessage}</span>
+                    </div>
+                  )}
+
+                  <div className="pt-1 flex justify-end">
+                    <button
+                      type="button"
+                      onClick={handleUploadAllToSupabase}
+                      disabled={isUploadingAll}
+                      className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-2 shadow-xs cursor-pointer disabled:bg-slate-300 disabled:cursor-not-allowed"
+                    >
+                      <UploadCloud size={14} className={isUploadingAll ? 'animate-bounce' : ''} />
+                      <span>{isUploadingAll ? 'Sedang Mengunggah...' : 'Unggah Semua Data Saat Ini ke Supabase Baru'}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Modal Footer */}
+            <div className="mt-4 pt-3.5 border-t border-slate-100 flex items-center justify-between">
+              <span className="text-[11px] text-slate-400 font-mono truncate max-w-[280px] sm:max-w-md">
+                URL: {sbStatus.url || 'Belum diisi'}
               </span>
               <button
                 onClick={() => setShowSqlModal(false)}

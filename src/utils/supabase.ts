@@ -24,20 +24,36 @@ export interface SupabaseStatusInfo {
   lastChecked?: string;
 }
 
-// 1. Initialize Supabase Client
-const env = (import.meta as any).env || {};
-const rawSupabaseUrl = (env.VITE_SUPABASE_URL || '').trim();
-const supabaseKey = (env.VITE_SUPABASE_ANON_KEY || '').trim();
+export const CUSTOM_URL_KEY = 'absensi_custom_supabase_url';
+export const CUSTOM_KEY_KEY = 'absensi_custom_supabase_key';
 
-// Normalize URL: remove trailing /rest/v1 or slashes
-export const cleanSupabaseUrl = rawSupabaseUrl
-  ? rawSupabaseUrl.replace(/\/rest\/v1\/?$/, '').replace(/\/$/, '')
-  : '';
+export function getActiveCredentials(): { url: string; key: string } {
+  const env = (import.meta as any).env || {};
+  let url = '';
+  let key = '';
 
-export const isSupabaseConfigured = Boolean(cleanSupabaseUrl && supabaseKey);
+  if (typeof window !== 'undefined' && window.localStorage) {
+    url = (localStorage.getItem(CUSTOM_URL_KEY) || '').trim();
+    key = (localStorage.getItem(CUSTOM_KEY_KEY) || '').trim();
+  }
 
-export const supabase: SupabaseClient | null = isSupabaseConfigured
-  ? createClient(cleanSupabaseUrl, supabaseKey, {
+  if (!url) {
+    url = (env.VITE_SUPABASE_URL || '').trim();
+  }
+  if (!key) {
+    key = (env.VITE_SUPABASE_ANON_KEY || '').trim();
+  }
+
+  const cleanUrl = url ? url.replace(/\/rest\/v1\/?$/, '').replace(/\/$/, '') : '';
+  return { url: cleanUrl, key: key.trim() };
+}
+
+let activeCreds = getActiveCredentials();
+export let cleanSupabaseUrl = activeCreds.url;
+export let isSupabaseConfigured = Boolean(activeCreds.url && activeCreds.key);
+
+export let supabase: SupabaseClient | null = isSupabaseConfigured
+  ? createClient(activeCreds.url, activeCreds.key, {
       auth: {
         persistSession: false,
         autoRefreshToken: false,
@@ -48,6 +64,49 @@ export const supabase: SupabaseClient | null = isSupabaseConfigured
 let supabaseTablesVerified = false;
 let supabaseCheckedAt = '';
 let supabaseErrorReason = '';
+
+export function reinitializeSupabaseClient(newUrl?: string, newKey?: string) {
+  if (newUrl !== undefined && typeof window !== 'undefined' && window.localStorage) {
+    if (newUrl.trim()) localStorage.setItem(CUSTOM_URL_KEY, newUrl.trim());
+    else localStorage.removeItem(CUSTOM_URL_KEY);
+  }
+  if (newKey !== undefined && typeof window !== 'undefined' && window.localStorage) {
+    if (newKey.trim()) localStorage.setItem(CUSTOM_KEY_KEY, newKey.trim());
+    else localStorage.removeItem(CUSTOM_KEY_KEY);
+  }
+
+  activeCreds = getActiveCredentials();
+  cleanSupabaseUrl = activeCreds.url;
+  isSupabaseConfigured = Boolean(activeCreds.url && activeCreds.key);
+
+  if (isSupabaseConfigured) {
+    try {
+      supabase = createClient(activeCreds.url, activeCreds.key, {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+        },
+      });
+    } catch (e: any) {
+      console.warn('Failed to initialize Supabase client:', e);
+      supabase = null;
+    }
+  } else {
+    supabase = null;
+  }
+
+  supabaseTablesVerified = false;
+  supabaseErrorReason = '';
+
+  // Notify server backend of updated credentials
+  if (activeCreds.url) {
+    fetch('/api/config/supabase', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: activeCreds.url, key: activeCreds.key }),
+    }).catch(() => {});
+  }
+}
 
 export function getSupabaseStatus(): SupabaseStatusInfo {
   return {
@@ -157,11 +216,19 @@ export async function deleteFromSupabase(
 export async function checkSupabaseTables(): Promise<boolean> {
   if (!supabase) {
     supabaseTablesVerified = false;
+    supabaseErrorReason = 'Kredensial Supabase belum terkonfigurasi';
     return false;
   }
 
   try {
-    const { data, error } = await supabase.from('attendance').select('id').limit(1);
+    const timeoutPromise = new Promise<{ data: any; error: any }>((_, reject) =>
+      setTimeout(() => reject(new Error('Koneksi timeout (proyek tidak ditemukan atau server tidak merespons)')), 5000)
+    );
+    const queryPromise = supabase.from('attendance').select('id').limit(1);
+
+    const res = await Promise.race([queryPromise, timeoutPromise]);
+    const { data, error } = res as any;
+
     supabaseCheckedAt = new Date().toISOString();
     if (error) {
       supabaseTablesVerified = false;
@@ -175,6 +242,70 @@ export async function checkSupabaseTables(): Promise<boolean> {
     supabaseTablesVerified = false;
     supabaseErrorReason = err?.message || 'Gagal menghubungi server Supabase';
     return false;
+  }
+}
+
+// 4. Inisialisasi / Upload seluruh data lokal & server ke Supabase baru
+export async function uploadAllDataToSupabase(): Promise<{
+  success: boolean;
+  message: string;
+  counts: Record<string, number>;
+}> {
+  if (!supabase) {
+    return {
+      success: false,
+      message: 'Supabase belum terhubung. Harap masukkan Project URL & Anon Key terlebih dahulu.',
+      counts: {},
+    };
+  }
+
+  try {
+    const school = JSON.parse(localStorage.getItem(KEYS.SCHOOL) || '{}');
+    const classes = JSON.parse(localStorage.getItem(KEYS.CLASSES) || '[]');
+    const teachers = JSON.parse(localStorage.getItem(KEYS.TEACHERS) || '[]');
+    const students = JSON.parse(localStorage.getItem(KEYS.STUDENTS) || '[]');
+    const holidays = JSON.parse(localStorage.getItem(KEYS.HOLIDAYS) || '[]');
+    const attendance = JSON.parse(localStorage.getItem(KEYS.ATTENDANCE) || '[]');
+
+    if (school && school.name) {
+      await pushToSupabase(KEYS.SCHOOL, school);
+    }
+    if (classes.length > 0) {
+      await pushToSupabase(KEYS.CLASSES, classes);
+    }
+    if (teachers.length > 0) {
+      await pushToSupabase(KEYS.TEACHERS, teachers);
+    }
+    if (students.length > 0) {
+      await pushToSupabase(KEYS.STUDENTS, students);
+    }
+    if (holidays.length > 0) {
+      await pushToSupabase(KEYS.HOLIDAYS, holidays);
+    }
+    if (attendance.length > 0) {
+      await pushToSupabase(KEYS.ATTENDANCE, attendance);
+    }
+
+    supabaseTablesVerified = true;
+    supabaseErrorReason = '';
+
+    return {
+      success: true,
+      message: 'Berhasil mengunggah seluruh data sekolah, guru, kelas, siswa, dan absensi ke Supabase baru!',
+      counts: {
+        classes: classes.length,
+        teachers: teachers.length,
+        students: students.length,
+        holidays: holidays.length,
+        attendance: attendance.length,
+      },
+    };
+  } catch (e: any) {
+    return {
+      success: false,
+      message: `Gagal mengunggah data ke Supabase: ${e?.message || 'Error tidak diketahui'}`,
+      counts: {},
+    };
   }
 }
 

@@ -369,6 +369,29 @@ app.delete('/api/db/item/:table/:id', (req, res) => {
   }
 });
 
+// Supabase config endpoint
+app.get('/api/config/supabase', (req, res) => {
+  res.json({
+    url: (process.env.VITE_SUPABASE_URL || '').replace(/\/rest\/v1\/?$/, '').replace(/\/$/, ''),
+    isConfigured: Boolean(process.env.VITE_SUPABASE_URL && process.env.VITE_SUPABASE_ANON_KEY),
+  });
+});
+
+app.post('/api/config/supabase', (req, res) => {
+  const { url, key } = req.body;
+  if (url !== undefined) {
+    process.env.VITE_SUPABASE_URL = (url || '').trim();
+  }
+  if (key !== undefined) {
+    process.env.VITE_SUPABASE_ANON_KEY = (key || '').trim();
+  }
+  res.json({
+    success: true,
+    url: (process.env.VITE_SUPABASE_URL || '').replace(/\/rest\/v1\/?$/, '').replace(/\/$/, ''),
+    isConfigured: Boolean(process.env.VITE_SUPABASE_URL && process.env.VITE_SUPABASE_ANON_KEY),
+  });
+});
+
 // Reset database endpoint
 app.post('/api/db/reset', (req, res) => {
   databaseCache = {
