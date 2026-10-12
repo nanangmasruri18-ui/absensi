@@ -315,3 +315,45 @@ export function exportSemesterReportToExcel(
   XLSX.utils.book_append_sheet(wb, ws, 'Rekap Semester');
   XLSX.writeFile(wb, `Rekap_Absensi_Semester_${className.replace(' ', '_')}_${semester.replace(' ', '_')}.xlsx`);
 }
+
+/**
+  * Exports student list to Excel format as a downloadable report/backup
+  */
+export function exportStudentListToExcel(
+  students: Student[],
+  classes: ClassRombel[],
+  filterClassName?: string
+) {
+  const getClassName = (cId: string) => {
+    const found = classes.find((c) => c.id === cId);
+    return found ? found.name : '-';
+  };
+
+  const rows: any[] = [
+    [filterClassName ? `DATA SISWA - ${filterClassName.toUpperCase()}` : 'DATA SELURUH SISWA'],
+    [`Tanggal Unduh: ${new Date().toLocaleDateString('id-ID', { dateStyle: 'full' })}`],
+    [],
+    ['No', 'NIS', 'NISN', 'Nama Lengkap Siswa', 'L/P', 'Kelas Rombel', 'Tempat Lahir', 'Tanggal Lahir']
+  ];
+
+  students.forEach((s, idx) => {
+    rows.push([
+      idx + 1,
+      s.nis,
+      s.nisn,
+      s.name,
+      s.gender,
+      getClassName(s.classId),
+      s.birthPlace || '-',
+      s.birthDate || '-'
+    ]);
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Data Siswa');
+  const filename = filterClassName 
+    ? `Data_Siswa_${filterClassName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.xlsx`
+    : `Data_Siswa_Lengkap_${new Date().toISOString().slice(0, 10)}.xlsx`;
+  XLSX.writeFile(wb, filename);
+}

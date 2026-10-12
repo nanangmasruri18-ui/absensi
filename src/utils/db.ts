@@ -1,5 +1,12 @@
 import { SchoolProfile, ClassRombel, Teacher, Student, Holiday, Attendance } from '../types';
-import { pushToSupabase, pushAttendanceRecords, recordRecentSave, deleteFromSupabase } from './supabase';
+import { 
+  pushToSupabase, 
+  pushAttendanceRecords, 
+  recordRecentSave, 
+  deleteFromSupabase,
+  deleteMultipleFromSupabase,
+  deleteAllStudentsFromSupabase 
+} from './supabase';
 
 // Simple "encryption" helper for password masking in localStorage
 export function encryptPassword(password: string): string {
@@ -317,6 +324,55 @@ class LocalDB {
     const list = this.getStudents().filter((s) => s.id !== id);
     this.saveStudents(list);
     deleteFromSupabase('students', id);
+  }
+
+  deleteAllStudents(classId?: string): { deletedCount: number; remainingCount: number } {
+    const all = this.getStudents();
+    let remaining: Student[] = [];
+    let toDelete: Student[] = [];
+
+    if (classId) {
+      remaining = all.filter((s) => s.classId !== classId);
+      toDelete = all.filter((s) => s.classId === classId);
+    } else {
+      remaining = [];
+      toDelete = all;
+    }
+
+    const deletedIds = toDelete.map((s) => s.id);
+    const deletedIdSet = new Set(deletedIds);
+
+    // 1. Save remaining students in localStorage & trigger sync event
+    this.saveStudents(remaining);
+
+    // 2. Clean up attendance records for deleted students
+    const currentAttendances = this.getAttendance();
+    const cleanAttendances = currentAttendances.filter((a) => !deletedIdSet.has(a.studentId));
+    if (cleanAttendances.length !== currentAttendances.length) {
+      this.saveAttendance(cleanAttendances);
+    }
+
+    // 3. Remove from Supabase
+    if (!classId) {
+      deleteAllStudentsFromSupabase(deletedIds);
+    } else {
+      deleteMultipleFromSupabase('students', deletedIds);
+    }
+
+    // 4. Update backend cache
+    fetch('/api/db', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-sync-source': 'internal-sync'
+      },
+      body: JSON.stringify({
+        students: remaining,
+        attendance: cleanAttendances
+      })
+    }).catch(() => {});
+
+    return { deletedCount: toDelete.length, remainingCount: remaining.length };
   }
 
   // HOLIDAYS

@@ -192,6 +192,23 @@ export function isDeletedId(id: string): boolean {
   }
 }
 
+export function recordDeletedIds(ids: string[]) {
+  try {
+    const raw = localStorage.getItem(TOMBSTONES_KEY) || '[]';
+    const list: string[] = JSON.parse(raw);
+    let changed = false;
+    for (const id of ids) {
+      if (!list.includes(id)) {
+        list.push(id);
+        changed = true;
+      }
+    }
+    if (changed) {
+      localStorage.setItem(TOMBSTONES_KEY, JSON.stringify(list));
+    }
+  } catch {}
+}
+
 export async function deleteFromSupabase(
   table: 'school' | 'classes' | 'teachers' | 'students' | 'holidays' | 'attendance',
   id: string
@@ -208,6 +225,50 @@ export async function deleteFromSupabase(
     return true;
   } catch (e) {
     console.warn(`Error deleting ${id} from ${table}:`, e);
+    return false;
+  }
+}
+
+export async function deleteMultipleFromSupabase(
+  table: 'school' | 'classes' | 'teachers' | 'students' | 'holidays' | 'attendance',
+  ids: string[]
+): Promise<boolean> {
+  if (!ids || ids.length === 0) return true;
+  recordDeletedIds(ids);
+  try {
+    if (supabase) {
+      const CHUNK_SIZE = 100;
+      for (let i = 0; i < ids.length; i += CHUNK_SIZE) {
+        const chunk = ids.slice(i, i + CHUNK_SIZE);
+        await supabase.from(table).delete().in('id', chunk);
+      }
+    }
+    return true;
+  } catch (e) {
+    console.warn(`Error deleting multiple from ${table}:`, e);
+    return false;
+  }
+}
+
+export async function deleteAllStudentsFromSupabase(studentIds?: string[]): Promise<boolean> {
+  if (studentIds && studentIds.length > 0) {
+    recordDeletedIds(studentIds);
+  }
+  try {
+    if (supabase) {
+      if (studentIds && studentIds.length > 0) {
+        const CHUNK_SIZE = 100;
+        for (let i = 0; i < studentIds.length; i += CHUNK_SIZE) {
+          const chunk = studentIds.slice(i, i + CHUNK_SIZE);
+          await supabase.from('students').delete().in('id', chunk);
+        }
+      } else {
+        await supabase.from('students').delete().neq('id', '__empty_dummy__');
+      }
+    }
+    return true;
+  } catch (e) {
+    console.warn('Error deleting all students from Supabase:', e);
     return false;
   }
 }
