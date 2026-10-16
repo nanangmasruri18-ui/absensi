@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../utils/db';
 import { UserSession, Student } from '../types';
-import { fetchAllFromSupabase } from '../utils/supabase';
+import { fetchAllFromSupabase, syncSupabaseConfigFromServer } from '../utils/supabase';
 import { 
   UserSquare, 
   Users, 
@@ -56,6 +56,7 @@ export default function GuruDashboard({ session, setActiveTab }: GuruDashboardPr
     setRefreshError(false);
     setRefreshMessage('Harap tunggu, sedang menyinkronkan data dengan server database...');
     try {
+      await syncSupabaseConfigFromServer(true);
       const success = await fetchAllFromSupabase(true);
       setRefreshTrigger((k) => k + 1);
       if (success) {

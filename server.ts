@@ -16,10 +16,42 @@ app.use(express.json({ limit: '20mb' }));
 // Ensure data directory exists
 const DATA_DIR = path.resolve(__dirname, 'data');
 const DB_FILE = path.join(DATA_DIR, 'database.json');
+const SUPABASE_FILE = path.join(DATA_DIR, 'supabase.json');
 
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
 }
+
+// Persisted Supabase configuration for multi-browser & multi-device auto-sync
+const supabaseConfig = {
+  url: '',
+  key: '',
+};
+
+try {
+  if (fs.existsSync(SUPABASE_FILE)) {
+    const raw = fs.readFileSync(SUPABASE_FILE, 'utf-8');
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object') {
+      supabaseConfig.url = (parsed.url || '').trim();
+      supabaseConfig.key = (parsed.key || '').trim();
+    }
+  }
+} catch (e) {
+  console.error('Error loading supabase config file:', e);
+}
+
+// Fallback to process.env if not set in file
+if (!supabaseConfig.url && process.env.VITE_SUPABASE_URL) {
+  supabaseConfig.url = process.env.VITE_SUPABASE_URL.trim();
+}
+if (!supabaseConfig.key && process.env.VITE_SUPABASE_ANON_KEY) {
+  supabaseConfig.key = process.env.VITE_SUPABASE_ANON_KEY.trim();
+}
+
+// Sync back to process.env
+if (supabaseConfig.url) process.env.VITE_SUPABASE_URL = supabaseConfig.url;
+if (supabaseConfig.key) process.env.VITE_SUPABASE_ANON_KEY = supabaseConfig.key;
 
 // Initial seed data
 const encryptPassword = (pwd: string) => Buffer.from(pwd).toString('base64');
@@ -369,26 +401,45 @@ app.delete('/api/db/item/:table/:id', (req, res) => {
   }
 });
 
-// Supabase config endpoint
+// Supabase config endpoint for automatic multi-browser sync
 app.get('/api/config/supabase', (req, res) => {
+  const url = (supabaseConfig.url || process.env.VITE_SUPABASE_URL || '').replace(/\/rest\/v1\/?$/, '').replace(/\/$/, '');
+  const key = (supabaseConfig.key || process.env.VITE_SUPABASE_ANON_KEY || '').trim();
   res.json({
-    url: (process.env.VITE_SUPABASE_URL || '').replace(/\/rest\/v1\/?$/, '').replace(/\/$/, ''),
-    isConfigured: Boolean(process.env.VITE_SUPABASE_URL && process.env.VITE_SUPABASE_ANON_KEY),
+    url,
+    key, // Returned so ANY browser opening the app automatically configures and syncs latest Supabase data
+    isConfigured: Boolean(url && key),
   });
 });
 
 app.post('/api/config/supabase', (req, res) => {
   const { url, key } = req.body;
-  if (url !== undefined) {
-    process.env.VITE_SUPABASE_URL = (url || '').trim();
+  const cleanUrl = url !== undefined ? String(url).trim().replace(/\/rest\/v1\/?$/, '').replace(/\/$/, '') : supabaseConfig.url;
+  const cleanKey = key !== undefined ? String(key).trim() : supabaseConfig.key;
+
+  supabaseConfig.url = cleanUrl;
+  supabaseConfig.key = cleanKey;
+  process.env.VITE_SUPABASE_URL = cleanUrl;
+  process.env.VITE_SUPABASE_ANON_KEY = cleanKey;
+
+  // Persist to disk so credentials survive server restarts
+  try {
+    fs.writeFileSync(SUPABASE_FILE, JSON.stringify(supabaseConfig, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('Failed to write supabase config file:', err);
   }
-  if (key !== undefined) {
-    process.env.VITE_SUPABASE_ANON_KEY = (key || '').trim();
-  }
+
+  // Broadcast configuration change to all connected browser clients via SSE
+  broadcastChange('supabase_config_updated', {
+    url: cleanUrl,
+    isConfigured: Boolean(cleanUrl && cleanKey),
+  });
+
   res.json({
     success: true,
-    url: (process.env.VITE_SUPABASE_URL || '').replace(/\/rest\/v1\/?$/, '').replace(/\/$/, ''),
-    isConfigured: Boolean(process.env.VITE_SUPABASE_URL && process.env.VITE_SUPABASE_ANON_KEY),
+    url: cleanUrl,
+    key: cleanKey,
+    isConfigured: Boolean(cleanUrl && cleanKey),
   });
 });
 

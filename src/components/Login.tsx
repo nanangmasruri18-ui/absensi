@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { db, encryptPassword, decryptPassword } from '../utils/db';
 import { UserSession, SchoolProfile, Teacher } from '../types';
-import { fetchAllFromSupabase, supabase, KEYS } from '../utils/supabase';
+import { fetchAllFromSupabase, supabase, KEYS, syncSupabaseConfigFromServer } from '../utils/supabase';
 import { 
   School, 
   User, 
@@ -40,13 +40,18 @@ export default function Login({ onLoginSuccess }: LoginProps) {
       setTeachers(db.getTeachers());
     };
 
-    fetchAllFromSupabase().then(() => reload());
+    // Auto-fetch credentials from backend and pull down latest accounts
+    syncSupabaseConfigFromServer().then(() => {
+      fetchAllFromSupabase(true).then(() => reload());
+    });
 
     window.addEventListener('db-synced', reload);
     window.addEventListener('storage', reload);
+    window.addEventListener('supabase-config-synced', reload);
     return () => {
       window.removeEventListener('db-synced', reload);
       window.removeEventListener('storage', reload);
+      window.removeEventListener('supabase-config-synced', reload);
     };
   }, []);
 
@@ -55,6 +60,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
     setRefreshError(false);
     setRefreshMessage('Menghubungkan dan menarik data terbaru dari Supabase...');
     try {
+      await syncSupabaseConfigFromServer(true);
       const success = await fetchAllFromSupabase(true);
       setSchool(db.getSchool());
       setTeachers(db.getTeachers());

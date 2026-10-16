@@ -60,12 +60,14 @@ export default function App() {
     };
     window.addEventListener('db-synced', handleSync);
     window.addEventListener('storage', handleSync);
+    window.addEventListener('supabase-config-synced', handleSync);
 
     return () => {
       cleanupRealtime();
       unsubscribe();
       window.removeEventListener('db-synced', handleSync);
       window.removeEventListener('storage', handleSync);
+      window.removeEventListener('supabase-config-synced', handleSync);
     };
   }, []);
 

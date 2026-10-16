@@ -8,7 +8,8 @@ import {
   SupabaseStatusInfo,
   reinitializeSupabaseClient,
   uploadAllDataToSupabase,
-  getActiveCredentials
+  getActiveCredentials,
+  syncSupabaseConfigFromServer
 } from '../utils/supabase';
 import { 
   Building2, 
@@ -193,9 +194,23 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
-    checkSupabaseTables().then(() => {
-      setSbStatus(getSupabaseStatus());
+    syncSupabaseConfigFromServer().then(() => {
+      const creds = getActiveCredentials();
+      setCustomUrl(creds.url);
+      setCustomKey(creds.key);
+      checkSupabaseTables().then(() => {
+        setSbStatus(getSupabaseStatus());
+      });
     });
+
+    const handleConfigSynced = () => {
+      const creds = getActiveCredentials();
+      setCustomUrl(creds.url);
+      setCustomKey(creds.key);
+      checkSupabaseTables().then(() => {
+        setSbStatus(getSupabaseStatus());
+      });
+    };
 
     let t: any = null;
     const handleDebouncedReload = () => {
@@ -205,10 +220,12 @@ export default function AdminDashboard() {
       }, 100);
     };
 
+    window.addEventListener('supabase-config-synced', handleConfigSynced);
     window.addEventListener('db-synced', handleDebouncedReload);
     window.addEventListener('absensi-updated', handleDebouncedReload);
     return () => {
       if (t) clearTimeout(t);
+      window.removeEventListener('supabase-config-synced', handleConfigSynced);
       window.removeEventListener('db-synced', handleDebouncedReload);
       window.removeEventListener('absensi-updated', handleDebouncedReload);
     };
@@ -219,6 +236,7 @@ export default function AdminDashboard() {
     setRefreshError(false);
     setRefreshMessage('Harap tunggu, sedang menyinkronkan data dengan Supabase dan database sekolah...');
     try {
+      await syncSupabaseConfigFromServer(true);
       const isSbReady = await checkSupabaseTables();
       setSbStatus(getSupabaseStatus());
       const success = await fetchAllFromSupabase(true);

@@ -98,14 +98,88 @@ export function reinitializeSupabaseClient(newUrl?: string, newKey?: string) {
   supabaseTablesVerified = false;
   supabaseErrorReason = '';
 
-  // Notify server backend of updated credentials
-  if (activeCreds.url) {
-    fetch('/api/config/supabase', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: activeCreds.url, key: activeCreds.key }),
-    }).catch(() => {});
+  // Notify server backend of updated credentials (saves to disk so all browsers auto-sync)
+  fetch('/api/config/supabase', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url: activeCreds.url, key: activeCreds.key }),
+  }).catch(() => {});
+}
+
+let isSyncingConfig = false;
+
+/**
+ * Automatically synchronizes Supabase URL & Key from the server backend.
+ * This guarantees that when the app is opened on ANY browser, device, or incognito window,
+ * it automatically gets the active Supabase credentials and pulls down the latest database
+ * without the user having to re-enter anything!
+ */
+export async function syncSupabaseConfigFromServer(forceFetchData = false): Promise<boolean> {
+  if (isSyncingConfig) return isSupabaseConfigured;
+  isSyncingConfig = true;
+  try {
+    const res = await fetch('/api/config/supabase', { cache: 'no-store' });
+    if (!res.ok) return isSupabaseConfigured;
+    const data = await res.json();
+    if (data && data.url && data.key) {
+      const cleanUrl = String(data.url).replace(/\/rest\/v1\/?$/, '').replace(/\/$/, '').trim();
+      const cleanKey = String(data.key).trim();
+      const currentUrl = (localStorage.getItem(CUSTOM_URL_KEY) || '').trim();
+      const currentKey = (localStorage.getItem(CUSTOM_KEY_KEY) || '').trim();
+
+      const isChanged = currentUrl !== cleanUrl || currentKey !== cleanKey;
+      if (isChanged || !supabase || forceFetchData) {
+        localStorage.setItem(CUSTOM_URL_KEY, cleanUrl);
+        localStorage.setItem(CUSTOM_KEY_KEY, cleanKey);
+
+        activeCreds = { url: cleanUrl, key: cleanKey };
+        cleanSupabaseUrl = cleanUrl;
+        isSupabaseConfigured = true;
+
+        try {
+          supabase = createClient(cleanUrl, cleanKey, {
+            auth: {
+              persistSession: false,
+              autoRefreshToken: false,
+            },
+          });
+        } catch (e: any) {
+          console.warn('Failed to initialize Supabase client from server config:', e);
+          supabase = null;
+          isSupabaseConfigured = false;
+        }
+
+        supabaseTablesVerified = false;
+        supabaseErrorReason = '';
+
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('supabase-config-synced', { detail: { url: cleanUrl } }));
+          window.dispatchEvent(new CustomEvent('db-synced'));
+        }
+
+        // Pull down all latest tables from Supabase into this browser immediately
+        if (supabase) {
+          await fetchAllFromSupabase(true);
+        }
+        return true;
+      }
+      return true;
+    } else if (data && !data.isConfigured) {
+      // Server currently has no Supabase credentials configured
+      return false;
+    }
+    return isSupabaseConfigured;
+  } catch (err) {
+    console.warn('Notice: Could not sync Supabase credentials from server:', err);
+    return isSupabaseConfigured;
+  } finally {
+    isSyncingConfig = false;
   }
+}
+
+// Auto-run config sync on module load in browser context
+if (typeof window !== 'undefined') {
+  syncSupabaseConfigFromServer().catch(() => {});
 }
 
 export function getSupabaseStatus(): SupabaseStatusInfo {
@@ -1144,10 +1218,17 @@ export function initRealtimeSync(): () => void {
   let sbDebounceTimer: any = null;
   let sseDebounceTimer: any = null;
   let focusDebounceTimer: any = null;
-
-  // A. Supabase Realtime Channel (Instant multi-device broadcast)
   let sbChannel: any = null;
-  if (supabase) {
+
+  function setupRealtimeChannel() {
+    if (sbChannel && supabase) {
+      try {
+        supabase.removeChannel(sbChannel);
+      } catch {}
+      sbChannel = null;
+    }
+    if (!supabase) return;
+
     try {
       sbChannel = supabase
         .channel('absensi-cloud-changes')
@@ -1181,10 +1262,43 @@ export function initRealtimeSync(): () => void {
             }, 800);
           }
         )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'students' },
+          () => {
+            if (sbDebounceTimer) clearTimeout(sbDebounceTimer);
+            sbDebounceTimer = setTimeout(() => {
+              fetchAllFromSupabase(true);
+            }, 800);
+          }
+        )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'classes' },
+          () => {
+            if (sbDebounceTimer) clearTimeout(sbDebounceTimer);
+            sbDebounceTimer = setTimeout(() => {
+              fetchAllFromSupabase(true);
+            }, 800);
+          }
+        )
         .subscribe();
     } catch (e) {
       console.warn('Supabase realtime channel warning:', e);
     }
+  }
+
+  // 1. Initial immediate sync of config from server & data fetch
+  syncSupabaseConfigFromServer().then((configured) => {
+    if (configured) {
+      setupRealtimeChannel();
+      checkSupabaseTables();
+    }
+    fetchAllFromSupabase();
+  });
+
+  if (supabase) {
+    setupRealtimeChannel();
   }
 
   // B. Server-Sent Events (SSE) listener for backend server
@@ -1199,6 +1313,13 @@ export function initRealtimeSync(): () => void {
           sseDebounceTimer = setTimeout(() => {
             fetchAllFromSupabase(true);
           }, 1500);
+        } else if (data.type === 'supabase_config_updated') {
+          syncSupabaseConfigFromServer(true).then((configured) => {
+            if (configured) {
+              setupRealtimeChannel();
+              checkSupabaseTables();
+            }
+          });
         } else if (data.type === 'connected') {
           if (data.updatedAt) {
             lastKnownServerTime = data.updatedAt;
