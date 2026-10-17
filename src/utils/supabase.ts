@@ -45,8 +45,8 @@ export const CUSTOM_URL_KEY = 'absensi_custom_supabase_url';
 export const CUSTOM_KEY_KEY = 'absensi_custom_supabase_key';
 
 // Standard fallback credentials if no custom or environment variables are present
-export const DEFAULT_SUPABASE_URL = 'https://rdsptjslgnjyzizmioru.supabase.co';
-export const DEFAULT_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJkc3B0anNsZ25qeXppem1pb3J1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwNDI1MTIsImV4cCI6MjA5NzYxODUxMn0.W-EN15YTa69bqOMtl4ab20XF5XDJs8AotbFX2ZNhwxE';
+export const DEFAULT_SUPABASE_URL = 'https://ophgulxltihwtbjsdifv.supabase.co';
+export const DEFAULT_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9waGd1bHhsdGlod3RianNkaWZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE4MDAyNzcsImV4cCI6MjEwNzM3NjI3N30.Kj56Au3-kfLI40R-WpYPQpM_w8GcApDUUynKDpkeg_4';
 
 export function getActiveCredentials(): { url: string; key: string } {
   let url = '';
@@ -58,11 +58,19 @@ export function getActiveCredentials(): { url: string; key: string } {
     if (b.url && b.key) {
       url = String(b.url).trim();
       key = String(b.key).trim();
+      // Auto-align localStorage so old cached projects don't override the active database
+      if (window.localStorage) {
+        const localUrl = (localStorage.getItem(CUSTOM_URL_KEY) || '').trim();
+        if (localUrl !== url) {
+          localStorage.setItem(CUSTOM_URL_KEY, url);
+          localStorage.setItem(CUSTOM_KEY_KEY, key);
+        }
+      }
     }
   }
 
-  // 2. Check localStorage (allows user in UI to test or configure another database project)
-  if (typeof window !== 'undefined' && window.localStorage) {
+  // 2. Check localStorage if bootstrap was not available
+  if (!url && typeof window !== 'undefined' && window.localStorage) {
     const localUrl = (localStorage.getItem(CUSTOM_URL_KEY) || '').trim();
     const localKey = (localStorage.getItem(CUSTOM_KEY_KEY) || '').trim();
     if (localUrl && localKey) {
