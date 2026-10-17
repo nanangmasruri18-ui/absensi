@@ -429,6 +429,30 @@ app.post('/api/config/supabase', (req, res) => {
     console.error('Failed to write supabase config file:', err);
   }
 
+  // Also write to .env for Vite client bundling
+  try {
+    const envPath = path.resolve(__dirname, '.env');
+    fs.writeFileSync(
+      envPath,
+      `# Supabase Configurations\nVITE_SUPABASE_URL=${cleanUrl}\nVITE_SUPABASE_ANON_KEY=${cleanKey}\n`,
+      'utf-8'
+    );
+  } catch (err) {}
+
+  // Also keep index.html bootstrap block in sync for instant loads across all devices
+  try {
+    const indexPath = path.resolve(__dirname, 'index.html');
+    if (fs.existsSync(indexPath)) {
+      let indexHtml = fs.readFileSync(indexPath, 'utf-8');
+      const bootstrapRegex = /<script id="sd-supabase-bootstrap">[\s\S]*?<\/script>/;
+      const newBootstrap = `<script id="sd-supabase-bootstrap">\n      window.__SD_SUPABASE_BOOTSTRAP__ = {\n        url: ${JSON.stringify(cleanUrl)},\n        key: ${JSON.stringify(cleanKey)}\n      };\n    </script>`;
+      if (bootstrapRegex.test(indexHtml)) {
+        indexHtml = indexHtml.replace(bootstrapRegex, newBootstrap);
+        fs.writeFileSync(indexPath, indexHtml, 'utf-8');
+      }
+    }
+  } catch (err) {}
+
   // Broadcast configuration change to all connected browser clients via SSE
   broadcastChange('supabase_config_updated', {
     url: cleanUrl,
@@ -460,80 +484,92 @@ app.post('/api/db/reset', (req, res) => {
 
 // Setup Vite or static serving
 async function startServer() {
-  // Sync memory cache from Supabase on startup if configured
-  try {
-    const sbUrl = (process.env.VITE_SUPABASE_URL || '').replace(/\/rest\/v1\/?$/, '').replace(/\/$/, '');
-    const sbKey = (process.env.VITE_SUPABASE_ANON_KEY || '').trim();
-    if (sbUrl && sbKey) {
-      const { createClient } = await import('@supabase/supabase-js');
-      const sbClient = createClient(sbUrl, sbKey);
-      const [sRes, cRes, tRes, stRes, hRes] = await Promise.all([
-        sbClient.from('school').select('*').limit(1),
-        sbClient.from('classes').select('*'),
-        sbClient.from('teachers').select('*'),
-        sbClient.from('students').select('*'),
-        sbClient.from('holidays').select('*'),
-      ]);
-      if (sRes.data && sRes.data[0]) {
-        const row = sRes.data[0];
-        databaseCache.school = {
-          name: row.name,
-          address: row.address || '',
-          npsn: row.npsn || '',
-          adminName: row.admin_name || '',
-          updatedAt: row.updated_at,
+  // Hydrate memory cache from Supabase asynchronously in background (non-blocking)
+  (async () => {
+    try {
+      const sbUrl = (process.env.VITE_SUPABASE_URL || '').replace(/\/rest\/v1\/?$/, '').replace(/\/$/, '');
+      const sbKey = (process.env.VITE_SUPABASE_ANON_KEY || '').trim();
+      if (sbUrl && sbKey) {
+        const { createClient } = await import('@supabase/supabase-js');
+        const sbClient = createClient(sbUrl, sbKey, {
+          auth: { persistSession: false },
+        });
+
+        const fetchWithTimeout = async (promise: Promise<any>, ms = 2500) => {
+          return Promise.race([
+            promise,
+            new Promise<any>((_, reject) => setTimeout(() => reject(new Error('timeout')), ms))
+          ]);
         };
+
+        const [sRes, cRes, tRes, stRes, hRes] = await fetchWithTimeout(
+          Promise.all([
+            sbClient.from('school').select('*').limit(1),
+            sbClient.from('classes').select('*'),
+            sbClient.from('teachers').select('*'),
+            sbClient.from('students').select('*'),
+            sbClient.from('holidays').select('*'),
+          ])
+        );
+
+        if (sRes?.data && sRes.data[0]) {
+          const row = sRes.data[0];
+          databaseCache.school = {
+            name: row.name,
+            address: row.address || '',
+            npsn: row.npsn || '',
+            adminName: row.admin_name || '',
+            updatedAt: row.updated_at,
+          };
+        }
+        if (cRes?.data && cRes.data.length > 0) {
+          databaseCache.classes = cRes.data.map((c: any) => ({
+            id: c.id,
+            name: c.name,
+            grade: c.grade,
+            homeroomTeacherId: c.homeroom_teacher_id || '',
+            updatedAt: c.updated_at,
+          }));
+        }
+        if (tRes?.data && tRes.data.length > 0) {
+          databaseCache.teachers = tRes.data.map((t: any) => ({
+            id: t.id,
+            nip: t.nip || '',
+            name: t.name,
+            gender: t.gender || 'L',
+            username: t.username,
+            passwordHash: t.password_hash,
+            assignedClassId: t.assigned_class_id || '',
+            role: t.role || 'guru',
+            updatedAt: t.updated_at,
+          }));
+        }
+        if (stRes?.data && stRes.data.length > 0) {
+          databaseCache.students = stRes.data.map((s: any) => ({
+            id: s.id,
+            nis: s.nis || '',
+            nisn: s.nisn || '',
+            name: s.name,
+            gender: s.gender || 'L',
+            birthPlace: s.birth_place || '',
+            birthDate: s.birth_date || '',
+            classId: s.class_id,
+            updatedAt: s.updated_at,
+          }));
+        }
+        if (hRes?.data && hRes.data.length > 0) {
+          databaseCache.holidays = hRes.data.map((h: any) => ({
+            id: h.id,
+            date: h.date,
+            name: h.name,
+            description: h.description || '',
+            updatedAt: h.updated_at,
+          }));
+        }
+        persistDb(true);
       }
-      if (cRes.data && cRes.data.length > 0) {
-        databaseCache.classes = cRes.data.map((c: any) => ({
-          id: c.id,
-          name: c.name,
-          grade: c.grade,
-          homeroomTeacherId: c.homeroom_teacher_id || '',
-          updatedAt: c.updated_at,
-        }));
-      }
-      if (tRes.data && tRes.data.length > 0) {
-        databaseCache.teachers = tRes.data.map((t: any) => ({
-          id: t.id,
-          nip: t.nip || '',
-          name: t.name,
-          gender: t.gender || 'L',
-          username: t.username,
-          passwordHash: t.password_hash,
-          assignedClassId: t.assigned_class_id || '',
-          role: t.role || 'guru',
-          updatedAt: t.updated_at,
-        }));
-      }
-      if (stRes.data && stRes.data.length > 0) {
-        databaseCache.students = stRes.data.map((s: any) => ({
-          id: s.id,
-          nis: s.nis || '',
-          nisn: s.nisn || '',
-          name: s.name,
-          gender: s.gender || 'L',
-          birthPlace: s.birth_place || '',
-          birthDate: s.birth_date || '',
-          classId: s.class_id,
-          updatedAt: s.updated_at,
-        }));
-      }
-      if (hRes.data && hRes.data.length > 0) {
-        databaseCache.holidays = hRes.data.map((h: any) => ({
-          id: h.id,
-          date: h.date,
-          name: h.name,
-          description: h.description || '',
-          updatedAt: h.updated_at,
-        }));
-      }
-      persistDb(true);
-      console.log('Server memory cache successfully initialized from Supabase cloud!');
-    }
-  } catch (err) {
-    console.warn('Notice: Server Supabase initialization fallback to local file:', err);
-  }
+    } catch (err) {}
+  })();
   const distPath = path.resolve(__dirname, 'dist');
   const hasDist = fs.existsSync(path.join(distPath, 'index.html'));
 

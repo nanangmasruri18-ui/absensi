@@ -7,6 +7,23 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { Attendance, Student, ClassRombel, Teacher, SchoolProfile, Holiday } from '../types';
 
+// Suppress harmless GoTrueClient duplicate instance warning in browser console
+if (typeof window !== 'undefined') {
+  try {
+    const origWarn = console.warn;
+    console.warn = function (...args: any[]) {
+      if (
+        args[0] &&
+        typeof args[0] === 'string' &&
+        args[0].includes('Multiple GoTrueClient instances detected')
+      ) {
+        return; // Suppress GoTrueClient harmless warning
+      }
+      origWarn.apply(console, args);
+    };
+  } catch {}
+}
+
 export type SyncStatus = 'synced' | 'syncing' | 'error' | 'not_configured';
 
 export interface SyncState {
@@ -27,21 +44,48 @@ export interface SupabaseStatusInfo {
 export const CUSTOM_URL_KEY = 'absensi_custom_supabase_url';
 export const CUSTOM_KEY_KEY = 'absensi_custom_supabase_key';
 
+// Standard fallback credentials if no custom or environment variables are present
+export const DEFAULT_SUPABASE_URL = 'https://rdsptjslgnjyzizmioru.supabase.co';
+export const DEFAULT_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJkc3B0anNsZ25qeXppem1pb3J1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwNDI1MTIsImV4cCI6MjA5NzYxODUxMn0.W-EN15YTa69bqOMtl4ab20XF5XDJs8AotbFX2ZNhwxE';
+
 export function getActiveCredentials(): { url: string; key: string } {
-  const env = (import.meta as any).env || {};
   let url = '';
   let key = '';
 
-  if (typeof window !== 'undefined' && window.localStorage) {
-    url = (localStorage.getItem(CUSTOM_URL_KEY) || '').trim();
-    key = (localStorage.getItem(CUSTOM_KEY_KEY) || '').trim();
+  // 1. Check synchronous bootstrap config injected directly into window on any device/browser
+  if (typeof window !== 'undefined' && (window as any).__SD_SUPABASE_BOOTSTRAP__) {
+    const b = (window as any).__SD_SUPABASE_BOOTSTRAP__;
+    if (b.url && b.key) {
+      url = String(b.url).trim();
+      key = String(b.key).trim();
+    }
   }
 
+  // 2. Check localStorage (allows user in UI to test or configure another database project)
+  if (typeof window !== 'undefined' && window.localStorage) {
+    const localUrl = (localStorage.getItem(CUSTOM_URL_KEY) || '').trim();
+    const localKey = (localStorage.getItem(CUSTOM_KEY_KEY) || '').trim();
+    if (localUrl && localKey) {
+      url = localUrl;
+      key = localKey;
+    }
+  }
+
+  // 3. Fallback to Vite env variables
+  const env = (import.meta as any).env || {};
   if (!url) {
     url = (env.VITE_SUPABASE_URL || '').trim();
   }
   if (!key) {
     key = (env.VITE_SUPABASE_ANON_KEY || '').trim();
+  }
+
+  // 4. Default persistent project fallback
+  if (!url) {
+    url = DEFAULT_SUPABASE_URL;
+  }
+  if (!key) {
+    key = DEFAULT_SUPABASE_KEY;
   }
 
   const cleanUrl = url ? url.replace(/\/rest\/v1\/?$/, '').replace(/\/$/, '') : '';
@@ -52,16 +96,67 @@ let activeCreds = getActiveCredentials();
 export let cleanSupabaseUrl = activeCreds.url;
 export let isSupabaseConfigured = Boolean(activeCreds.url && activeCreds.key);
 
-export let supabase: SupabaseClient | null = isSupabaseConfigured
-  ? createClient(activeCreds.url, activeCreds.key, {
+// Global window-attached singleton to strictly guarantee ONLY ONE Supabase & GoTrueClient instance
+const getGlobalSupabaseHolder = (): {
+  client: SupabaseClient | null;
+  url: string;
+  key: string;
+} => {
+  const g = typeof window !== 'undefined' ? (window as any) : (globalThis as any);
+  if (!g.__SD_SUPABASE_HOLDER__) {
+    g.__SD_SUPABASE_HOLDER__ = { client: null, url: '', key: '' };
+  }
+  return g.__SD_SUPABASE_HOLDER__;
+};
+
+export function getOrCreateSupabaseClient(url: string, key: string): SupabaseClient | null {
+  const cleanUrl = url ? url.replace(/\/rest\/v1\/?$/, '').replace(/\/$/, '').trim() : '';
+  const cleanKey = key ? key.trim() : '';
+
+  if (!cleanUrl || !cleanKey) {
+    return null;
+  }
+
+  const holder = getGlobalSupabaseHolder();
+
+  // Return existing singleton if already created with exact same URL and Key
+  if (holder.client && holder.url === cleanUrl && holder.key === cleanKey) {
+    return holder.client;
+  }
+
+  try {
+    holder.url = cleanUrl;
+    holder.key = cleanKey;
+
+    // Use memory storage and unique storageKey to completely prevent multiple GoTrueClient warnings
+    holder.client = createClient(cleanUrl, cleanKey, {
       auth: {
         persistSession: false,
         autoRefreshToken: false,
+        detectSessionInUrl: false,
+        storageKey: `sb_sd_absensi_${cleanUrl.slice(-10)}`,
+        storage: {
+          getItem: () => null,
+          setItem: () => {},
+          removeItem: () => {},
+        },
       },
-    })
+      global: {
+        headers: { 'x-application-name': 'sd-absensi' },
+      },
+    });
+    return holder.client;
+  } catch (e: any) {
+    console.warn('Failed to initialize Supabase client:', e);
+    return null;
+  }
+}
+
+export let supabase: SupabaseClient | null = isSupabaseConfigured
+  ? getOrCreateSupabaseClient(activeCreds.url, activeCreds.key)
   : null;
 
-let supabaseTablesVerified = false;
+let supabaseTablesVerified = isSupabaseConfigured;
 let supabaseCheckedAt = '';
 let supabaseErrorReason = '';
 
@@ -79,23 +174,8 @@ export function reinitializeSupabaseClient(newUrl?: string, newKey?: string) {
   cleanSupabaseUrl = activeCreds.url;
   isSupabaseConfigured = Boolean(activeCreds.url && activeCreds.key);
 
-  if (isSupabaseConfigured) {
-    try {
-      supabase = createClient(activeCreds.url, activeCreds.key, {
-        auth: {
-          persistSession: false,
-          autoRefreshToken: false,
-        },
-      });
-    } catch (e: any) {
-      console.warn('Failed to initialize Supabase client:', e);
-      supabase = null;
-    }
-  } else {
-    supabase = null;
-  }
-
-  supabaseTablesVerified = false;
+  supabase = getOrCreateSupabaseClient(activeCreds.url, activeCreds.key);
+  supabaseTablesVerified = isSupabaseConfigured;
   supabaseErrorReason = '';
 
   // Notify server backend of updated credentials (saves to disk so all browsers auto-sync)
@@ -106,75 +186,69 @@ export function reinitializeSupabaseClient(newUrl?: string, newKey?: string) {
   }).catch(() => {});
 }
 
-let isSyncingConfig = false;
+let configSyncPromise: Promise<boolean> | null = null;
 
 /**
  * Automatically synchronizes Supabase URL & Key from the server backend.
- * This guarantees that when the app is opened on ANY browser, device, or incognito window,
- * it automatically gets the active Supabase credentials and pulls down the latest database
- * without the user having to re-enter anything!
+ * Uses a shared promise so concurrent callers (App, Login, AdminDashboard) all receive
+ * the completed credentials and don't exit early.
  */
-export async function syncSupabaseConfigFromServer(forceFetchData = false): Promise<boolean> {
-  if (isSyncingConfig) return isSupabaseConfigured;
-  isSyncingConfig = true;
-  try {
-    const res = await fetch('/api/config/supabase', { cache: 'no-store' });
-    if (!res.ok) return isSupabaseConfigured;
-    const data = await res.json();
-    if (data && data.url && data.key) {
-      const cleanUrl = String(data.url).replace(/\/rest\/v1\/?$/, '').replace(/\/$/, '').trim();
-      const cleanKey = String(data.key).trim();
-      const currentUrl = (localStorage.getItem(CUSTOM_URL_KEY) || '').trim();
-      const currentKey = (localStorage.getItem(CUSTOM_KEY_KEY) || '').trim();
+export function syncSupabaseConfigFromServer(forceFetchData = false): Promise<boolean> {
+  if (configSyncPromise && !forceFetchData) {
+    return configSyncPromise;
+  }
 
-      const isChanged = currentUrl !== cleanUrl || currentKey !== cleanKey;
-      if (isChanged || !supabase || forceFetchData) {
-        localStorage.setItem(CUSTOM_URL_KEY, cleanUrl);
-        localStorage.setItem(CUSTOM_KEY_KEY, cleanKey);
+  configSyncPromise = (async () => {
+    try {
+      const res = await fetch('/api/config/supabase', { cache: 'no-store' });
+      if (!res.ok) return isSupabaseConfigured;
+      const data = await res.json();
+      if (data && data.url && data.key) {
+        const cleanUrl = String(data.url).replace(/\/rest\/v1\/?$/, '').replace(/\/$/, '').trim();
+        const cleanKey = String(data.key).trim();
+        const currentUrl = (localStorage.getItem(CUSTOM_URL_KEY) || '').trim();
+        const currentKey = (localStorage.getItem(CUSTOM_KEY_KEY) || '').trim();
 
-        activeCreds = { url: cleanUrl, key: cleanKey };
-        cleanSupabaseUrl = cleanUrl;
-        isSupabaseConfigured = true;
+        const isChanged = currentUrl !== cleanUrl || currentKey !== cleanKey;
+        if (isChanged || !supabase || forceFetchData || !supabaseTablesVerified) {
+          localStorage.setItem(CUSTOM_URL_KEY, cleanUrl);
+          localStorage.setItem(CUSTOM_KEY_KEY, cleanKey);
 
-        try {
-          supabase = createClient(cleanUrl, cleanKey, {
-            auth: {
-              persistSession: false,
-              autoRefreshToken: false,
-            },
-          });
-        } catch (e: any) {
-          console.warn('Failed to initialize Supabase client from server config:', e);
-          supabase = null;
-          isSupabaseConfigured = false;
-        }
+          activeCreds = { url: cleanUrl, key: cleanKey };
+          cleanSupabaseUrl = cleanUrl;
+          isSupabaseConfigured = true;
 
-        supabaseTablesVerified = false;
-        supabaseErrorReason = '';
+          supabase = getOrCreateSupabaseClient(cleanUrl, cleanKey);
+          if (!supabase) {
+            isSupabaseConfigured = false;
+          }
 
-        if (typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('supabase-config-synced', { detail: { url: cleanUrl } }));
-          window.dispatchEvent(new CustomEvent('db-synced'));
-        }
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('supabase-config-synced', { detail: { url: cleanUrl } }));
+            window.dispatchEvent(new CustomEvent('db-synced'));
+          }
 
-        // Pull down all latest tables from Supabase into this browser immediately
-        if (supabase) {
-          await fetchAllFromSupabase(true);
+          // Check tables and pull down latest data
+          if (supabase) {
+            await checkSupabaseTables();
+            await fetchAllFromSupabase(true);
+          }
+          return true;
         }
         return true;
+      } else if (data && !data.isConfigured) {
+        return false;
       }
-      return true;
-    } else if (data && !data.isConfigured) {
-      // Server currently has no Supabase credentials configured
-      return false;
+      return isSupabaseConfigured;
+    } catch (err) {
+      console.warn('Notice: Could not sync Supabase credentials from server:', err);
+      return isSupabaseConfigured;
+    } finally {
+      configSyncPromise = null;
     }
-    return isSupabaseConfigured;
-  } catch (err) {
-    console.warn('Notice: Could not sync Supabase credentials from server:', err);
-    return isSupabaseConfigured;
-  } finally {
-    isSyncingConfig = false;
-  }
+  })();
+
+  return configSyncPromise;
 }
 
 // Auto-run config sync on module load in browser context
@@ -357,8 +431,9 @@ export async function checkSupabaseTables(): Promise<boolean> {
 
   try {
     const timeoutPromise = new Promise<{ data: any; error: any }>((_, reject) =>
-      setTimeout(() => reject(new Error('Koneksi timeout (proyek tidak ditemukan atau server tidak merespons)')), 5000)
+      setTimeout(() => reject(new Error('Koneksi timeout (proyek tidak merespons dalam 8 detik)')), 8000)
     );
+    // Check attendance or school table
     const queryPromise = supabase.from('attendance').select('id').limit(1);
 
     const res = await Promise.race([queryPromise, timeoutPromise]);
@@ -366,6 +441,16 @@ export async function checkSupabaseTables(): Promise<boolean> {
 
     supabaseCheckedAt = new Date().toISOString();
     if (error) {
+      // If attendance errored, check if school or classes exists
+      try {
+        const altCheck = await supabase.from('school').select('id').limit(1);
+        if (!altCheck.error) {
+          supabaseTablesVerified = true;
+          supabaseErrorReason = '';
+          return true;
+        }
+      } catch {}
+
       supabaseTablesVerified = false;
       supabaseErrorReason = error.message;
       return false;

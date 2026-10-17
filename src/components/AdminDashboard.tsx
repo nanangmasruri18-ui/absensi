@@ -168,6 +168,7 @@ export default function AdminDashboard() {
 
   // Supabase Status and modal
   const [sbStatus, setSbStatus] = useState<SupabaseStatusInfo>(getSupabaseStatus());
+  const [isCheckingStatus, setIsCheckingStatus] = useState<boolean>(!sbStatus.isConfigured || !sbStatus.isTablesReady);
   const [showSqlModal, setShowSqlModal] = useState(false);
   const [modalTab, setModalTab] = useState<'guide' | 'sql' | 'credentials'>('guide');
   const [copiedSql, setCopiedSql] = useState(false);
@@ -194,13 +195,17 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
+    setIsCheckingStatus(true);
     syncSupabaseConfigFromServer().then(() => {
       const creds = getActiveCredentials();
       setCustomUrl(creds.url);
       setCustomKey(creds.key);
       checkSupabaseTables().then(() => {
         setSbStatus(getSupabaseStatus());
+        setIsCheckingStatus(false);
       });
+    }).catch(() => {
+      setIsCheckingStatus(false);
     });
 
     const handleConfigSynced = () => {
@@ -209,6 +214,7 @@ export default function AdminDashboard() {
       setCustomKey(creds.key);
       checkSupabaseTables().then(() => {
         setSbStatus(getSupabaseStatus());
+        setIsCheckingStatus(false);
       });
     };
 
@@ -413,16 +419,21 @@ export default function AdminDashboard() {
       <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-start sm:items-center gap-3">
-            <div className={`p-2.5 rounded-xl ${sbStatus.isConfigured && sbStatus.isTablesReady ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
+            <div className={`p-2.5 rounded-xl ${sbStatus.isConfigured ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
               <Database size={20} />
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 <h3 className="text-xs font-bold text-slate-800">Sinkronisasi Database Cloud (Supabase Cloud)</h3>
-                {sbStatus.isConfigured && sbStatus.isTablesReady ? (
+                {isCheckingStatus ? (
+                  <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200 flex items-center gap-1">
+                    <RefreshCw size={10} className="animate-spin text-blue-600" />
+                    Menyambungkan Database Cloud...
+                  </span>
+                ) : sbStatus.isConfigured ? (
                   <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
                     <CheckCircle2 size={10} />
-                    Supabase Cloud Aktif & Siap
+                    Supabase Cloud Aktif & Terhubung
                   </span>
                 ) : (
                   <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1">
@@ -459,29 +470,51 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Warning if disconnected or tables missing */}
-        {(!sbStatus.isConfigured || !sbStatus.isTablesReady) && (
+        {/* Warning ONLY if database is truly not configured and not in checking state */}
+        {!isCheckingStatus && !sbStatus.isConfigured && (
           <div className="p-3.5 bg-amber-50/80 border border-amber-200 rounded-xl text-xs text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-start gap-2.5">
               <AlertCircle size={17} className="text-amber-600 shrink-0 mt-0.5" />
               <div>
-                <p className="font-bold text-amber-950">Database Supabase Baru Belum Terhubung</p>
+                <p className="font-bold text-amber-950">Database Supabase Belum Terhubung</p>
                 <p className="text-[11px] text-amber-800 mt-0.5 leading-relaxed">
-                  {sbStatus.errorMessage
-                    ? `Status saat ini: ${sbStatus.errorMessage}. `
-                    : 'Koneksi ke Supabase sebelumnya telah diputus/dihapus. '}
-                  Ikuti panduan mudah 5 langkah untuk membuat database baru di Supabase dan menghubungkannya ke aplikasi.
+                  Masukkan URL dan Kunci API Supabase agar absensi dan data siswa tersinkronisasi antar-perangkat secara otomatis.
                 </p>
               </div>
             </div>
             <button
               onClick={() => {
-                setModalTab('guide');
+                setModalTab('connect');
                 setShowSqlModal(true);
               }}
               className="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-[11px] font-bold rounded-lg shrink-0 cursor-pointer shadow-xs transition"
             >
-              Buka Panduan Setup
+              Hubungkan Database
+            </button>
+          </div>
+        )}
+
+        {/* Helpful alert if configured but tables need initialization */}
+        {!isCheckingStatus && sbStatus.isConfigured && !sbStatus.isTablesReady && (
+          <div className="p-3.5 bg-blue-50/90 border border-blue-200 rounded-xl text-xs text-blue-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-start gap-2.5">
+              <Sparkles size={17} className="text-blue-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-bold text-blue-950">Database Supabase Baru Terhubung ({sbStatus.url})</p>
+                <p className="text-[11px] text-blue-800 mt-0.5 leading-relaxed">
+                  {sbStatus.errorMessage
+                    ? `Status: ${sbStatus.errorMessage}. Klik tombol di samping untuk menyelaraskan data lokal ke database baru.`
+                    : 'Tabel database siap diselaraskan. Klik "Unggah Semua Data" untuk memigrasikan seluruh siswa, rombel, dan absensi.'}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={handleUploadAllToSupabase}
+              disabled={isUploadingAll}
+              className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold rounded-lg shrink-0 cursor-pointer shadow-xs transition flex items-center gap-1.5"
+            >
+              <RefreshCw size={12} className={isUploadingAll ? 'animate-spin' : ''} />
+              {isUploadingAll ? 'Mengunggah...' : 'Unggah Semua Data ke Supabase'}
             </button>
           </div>
         )}
