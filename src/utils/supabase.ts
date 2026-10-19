@@ -7,17 +7,18 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { Attendance, Student, ClassRombel, Teacher, SchoolProfile, Holiday } from '../types';
 
-// Suppress harmless GoTrueClient duplicate instance warning in browser console
+// Suppress harmless GoTrueClient duplicate instance and realtime channel warnings in browser console
 if (typeof window !== 'undefined') {
   try {
     const origWarn = console.warn;
     console.warn = function (...args: any[]) {
+      const msg = typeof args[0] === 'string' ? args[0] : (args[0]?.message || String(args[0] || ''));
       if (
-        args[0] &&
-        typeof args[0] === 'string' &&
-        args[0].includes('Multiple GoTrueClient instances detected')
+        msg.includes('Multiple GoTrueClient instances detected') ||
+        msg.includes('after `subscribe()`') ||
+        msg.includes('cannot add `postgres_changes`')
       ) {
-        return; // Suppress GoTrueClient harmless warning
+        return; // Suppress harmless duplicate subscription warnings
       }
       origWarn.apply(console, args);
     };
@@ -488,12 +489,46 @@ export async function uploadAllDataToSupabase(): Promise<{
   }
 
   try {
-    const school = JSON.parse(localStorage.getItem(KEYS.SCHOOL) || '{}');
-    const classes = JSON.parse(localStorage.getItem(KEYS.CLASSES) || '[]');
-    const teachers = JSON.parse(localStorage.getItem(KEYS.TEACHERS) || '[]');
-    const students = JSON.parse(localStorage.getItem(KEYS.STUDENTS) || '[]');
-    const holidays = JSON.parse(localStorage.getItem(KEYS.HOLIDAYS) || '[]');
-    const attendance = JSON.parse(localStorage.getItem(KEYS.ATTENDANCE) || '[]');
+    let school = JSON.parse(localStorage.getItem(KEYS.SCHOOL) || '{}');
+    let classes = JSON.parse(localStorage.getItem(KEYS.CLASSES) || '[]');
+    let teachers = JSON.parse(localStorage.getItem(KEYS.TEACHERS) || '[]');
+    let students = JSON.parse(localStorage.getItem(KEYS.STUDENTS) || '[]');
+    let holidays = JSON.parse(localStorage.getItem(KEYS.HOLIDAYS) || '[]');
+    let attendance = JSON.parse(localStorage.getItem(KEYS.ATTENDANCE) || '[]');
+
+    // Amankan data: jika penyimpanan browser lokal kosong atau sebagian, ambil dari server database.json
+    if (!school?.name || classes.length === 0 || students.length === 0 || teachers.length === 0) {
+      try {
+        const resp = await fetch('/api/db');
+        if (resp.ok) {
+          const srv = await resp.json();
+          if (!school?.name && srv.school?.name) {
+            school = srv.school;
+            localStorage.setItem(KEYS.SCHOOL, JSON.stringify(school));
+          }
+          if (classes.length === 0 && Array.isArray(srv.classes) && srv.classes.length > 0) {
+            classes = srv.classes;
+            localStorage.setItem(KEYS.CLASSES, JSON.stringify(classes));
+          }
+          if (teachers.length === 0 && Array.isArray(srv.teachers) && srv.teachers.length > 0) {
+            teachers = srv.teachers;
+            localStorage.setItem(KEYS.TEACHERS, JSON.stringify(teachers));
+          }
+          if (students.length === 0 && Array.isArray(srv.students) && srv.students.length > 0) {
+            students = srv.students;
+            localStorage.setItem(KEYS.STUDENTS, JSON.stringify(students));
+          }
+          if (holidays.length === 0 && Array.isArray(srv.holidays) && srv.holidays.length > 0) {
+            holidays = srv.holidays;
+            localStorage.setItem(KEYS.HOLIDAYS, JSON.stringify(holidays));
+          }
+          if (attendance.length === 0 && Array.isArray(srv.attendance) && srv.attendance.length > 0) {
+            attendance = srv.attendance;
+            localStorage.setItem(KEYS.ATTENDANCE, JSON.stringify(attendance));
+          }
+        }
+      } catch {}
+    }
 
     if (school && school.name) {
       await pushToSupabase(KEYS.SCHOOL, school);
@@ -1312,19 +1347,34 @@ export function initRealtimeSync(): () => void {
   let sseDebounceTimer: any = null;
   let focusDebounceTimer: any = null;
   let sbChannel: any = null;
+  let currentRealtimeClient: SupabaseClient | null = null;
+  let isChannelInitializing = false;
 
-  function setupRealtimeChannel() {
-    if (sbChannel && supabase) {
-      try {
-        supabase.removeChannel(sbChannel);
-      } catch {}
-      sbChannel = null;
+  async function setupRealtimeChannel() {
+    if (!supabase || isChannelInitializing) return;
+
+    // Jika channel sudah aktif pada instance Supabase yang sama, tidak perlu membuat ulang
+    if (sbChannel && currentRealtimeClient === supabase) {
+      return;
     }
-    if (!supabase) return;
 
+    isChannelInitializing = true;
     try {
-      sbChannel = supabase
-        .channel('absensi-cloud-changes')
+      if (sbChannel && currentRealtimeClient) {
+        try {
+          await currentRealtimeClient.removeChannel(sbChannel);
+        } catch {}
+        sbChannel = null;
+      }
+
+      if (!supabase) return;
+      currentRealtimeClient = supabase;
+
+      // Gunakan nama channel unik agar tidak bertabrakan dengan channel yang sedang unsubscribe
+      const channelId = `absensi-cloud-${Math.random().toString(36).substring(2, 9)}`;
+      const channel = supabase.channel(channelId);
+
+      channel
         .on(
           'postgres_changes',
           { event: '*', schema: 'public', table: 'attendance' },
@@ -1376,8 +1426,14 @@ export function initRealtimeSync(): () => void {
           }
         )
         .subscribe();
-    } catch (e) {
-      console.warn('Supabase realtime channel warning:', e);
+
+      sbChannel = channel;
+    } catch (e: any) {
+      if (!e?.message?.includes('after `subscribe()`') && !e?.message?.includes('cannot add `postgres_changes`')) {
+        console.warn('Supabase realtime channel notice:', e);
+      }
+    } finally {
+      isChannelInitializing = false;
     }
   }
 
