@@ -336,6 +336,93 @@ export function exportMonthlyReportToExcel(
 }
 
 /**
+ * Exports Blank Monthly Attendance Report (Blangko Kosong) to Excel format:
+ * - Kolom tanggal 1..daysInMonth kosong bersih (tanpa strip '-') untuk diisi / ditulis manual
+ * - Kolom jumlah H, S, I, A dikosongkan (tanpa angka 0 atau strip)
+ * - Tanda tangan kepala sekolah dikosongkan (hanya tanda tangan guru kelas / wali kelas)
+ */
+export function exportBlankMonthlyReportToExcel(
+  school: { name: string; address: string; npsn: string },
+  className: string,
+  monthName: string,
+  year: number,
+  daysInMonth: number,
+  students: Student[],
+  teacherName?: string,
+  teacherNip?: string
+) {
+  const wb = XLSX.utils.book_new();
+  
+  // Header Dokumen
+  const rows: any[] = [
+    [`BLANGKO REKAPITULASI ABSENSI SISWA BULANAN - ${monthName.toUpperCase()} ${year}`],
+    [school.name.toUpperCase()],
+    [`NPSN: ${school.npsn} | Alamat: ${school.address}`],
+    [`Kelas / Rombel: ${className}`],
+    [], // baris kosong
+  ];
+
+  // Baris Header Kolom Tabel: No, NISN, Nama Siswa, L/P, [1..daysInMonth], H, S, I, A
+  const headerRow = ['No', 'NISN', 'Nama Lengkap Siswa', 'L/P'];
+  for (let d = 1; d <= daysInMonth; d++) {
+    headerRow.push(String(d));
+  }
+  headerRow.push('H', 'S', 'I', 'A');
+  rows.push(headerRow);
+
+  // Baris Data Siswa: Kotak tanggal dan jumlah H,S,I,A dikosongkan (string kosong tanpa strip)
+  students.forEach((student, index) => {
+    const studentRow: any[] = [
+      index + 1,
+      student.nisn || student.nis || '',
+      student.name,
+      student.gender
+    ];
+
+    // Kolom tanggal 1..daysInMonth: KOSONG BERSIH (tanpa strip '-')
+    for (let d = 1; d <= daysInMonth; d++) {
+      studentRow.push('');
+    }
+
+    // Kolom Rekap H, S, I, A: KOSONG BERSIH (kosongkan juga jumlah A,I,S nya)
+    studentRow.push('', '', '', '');
+    rows.push(studentRow);
+  });
+
+  // Bagian Tanda Tangan: Kepala sekolah dikosongkan saja, hanya Wali/Guru Kelas di sebelah kanan
+  rows.push([]);
+  rows.push([]);
+  const dateStamp = `Gelora, .................................... ${year}`;
+  
+  const totalCols = headerRow.length;
+  const signaturePaddingRow = Array(totalCols).fill('');
+  signaturePaddingRow[Math.max(0, totalCols - 6)] = dateStamp;
+  rows.push(signaturePaddingRow);
+
+  const signatureRoleRow = Array(totalCols).fill('');
+  signatureRoleRow[Math.max(0, totalCols - 6)] = 'Guru Kelas / Wali Kelas,';
+  rows.push(signatureRoleRow);
+
+  rows.push(Array(totalCols).fill('')); // Ruang tanda tangan fisik
+  rows.push(Array(totalCols).fill(''));
+  rows.push(Array(totalCols).fill(''));
+
+  const signatureNameRow = Array(totalCols).fill('');
+  signatureNameRow[Math.max(0, totalCols - 6)] = teacherName ? teacherName : '( ............................................... )';
+  rows.push(signatureNameRow);
+
+  const signatureNipRow = Array(totalCols).fill('');
+  signatureNipRow[Math.max(0, totalCols - 6)] = teacherNip ? `NIP. ${teacherNip}` : 'NIP. ...............................................';
+  rows.push(signatureNipRow);
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!showGrid'] = true;
+
+  XLSX.utils.book_append_sheet(wb, ws, 'Blangko Kosong');
+  XLSX.writeFile(wb, `Blangko_Kosong_Absensi_${className.replace(/\s+/g, '_')}_Bulanan_${monthName}_${year}.xlsx`);
+}
+
+/**
  * Exports Semester Attendance Report to Excel format
  */
 export function exportSemesterReportToExcel(

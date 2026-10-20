@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { db, isSunday, isHoliday } from '../utils/db';
 import { Student, ClassRombel, UserSession, Holiday } from '../types';
-import { exportMonthlyReportToExcel } from '../utils/excel';
-import { generateMonthlyPDF } from '../utils/pdf';
+import { exportMonthlyReportToExcel, exportBlankMonthlyReportToExcel } from '../utils/excel';
+import { generateMonthlyPDF, generateBlankMonthlyPDF } from '../utils/pdf';
 import { 
   FileSpreadsheet, 
   FileDown, 
@@ -10,7 +10,8 @@ import {
   ChevronRight, 
   Printer, 
   HelpCircle,
-  AlertCircle
+  AlertCircle,
+  FileText
 } from 'lucide-react';
 
 interface RekapBulananProps {
@@ -154,6 +155,8 @@ export default function RekapBulanan({ session, initialClassId, initialMonth, in
     };
   };
 
+  const [isBlankView, setIsBlankView] = useState(false);
+
   // Triggers downloads
   const handleDownloadExcel = () => {
     if (!selectedClassId || students.length === 0) return;
@@ -194,6 +197,46 @@ export default function RekapBulanan({ session, initialClassId, initialMonth, in
     });
   };
 
+  // Unduh Blangko Kosong Excel (Tanpa strip '-', kosongkan jumlah A,I,S, tanda tangan kepsek dikosongkan)
+  const handleDownloadBlankExcel = () => {
+    if (!selectedClassId || students.length === 0) return;
+    const targetClass = classes.find(c => c.id === selectedClassId);
+    const teachersList = db.getTeachers();
+    const classTeacher = teachersList.find(t => t.assignedClassId === selectedClassId)
+      || teachersList.find(t => t.id === targetClass?.homeroomTeacherId);
+
+    exportBlankMonthlyReportToExcel(
+      school,
+      targetClass?.name || 'Kelas',
+      months[selectedMonth],
+      selectedYear,
+      daysInMonth,
+      students,
+      classTeacher?.name,
+      classTeacher?.nip
+    );
+  };
+
+  // Cetak / Unduh Blangko Kosong PDF (Siap Cetak F4/A4 Landscape, kotak bersih untuk diisi pensil/pulpen)
+  const handleDownloadBlankPDF = () => {
+    if (!selectedClassId || students.length === 0) return;
+    const targetClass = classes.find(c => c.id === selectedClassId);
+    const teachersList = db.getTeachers();
+    const classTeacher = teachersList.find(t => t.assignedClassId === selectedClassId)
+      || teachersList.find(t => t.id === targetClass?.homeroomTeacherId);
+
+    generateBlankMonthlyPDF({
+      school,
+      className: targetClass?.name || 'Kelas',
+      homeroomTeacherName: classTeacher?.name || '',
+      homeroomTeacherNip: classTeacher?.nip || '',
+      monthName: months[selectedMonth],
+      year: selectedYear,
+      daysInMonth,
+      students,
+    });
+  };
+
   const getClassNameLabel = () => {
     const found = classes.find((c) => c.id === selectedClassId);
     return found ? found.name : 'Rombel';
@@ -204,28 +247,71 @@ export default function RekapBulanan({ session, initialClassId, initialMonth, in
       <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between border-b border-slate-100 pb-5 gap-4">
         <div>
           <h2 className="text-base sm:text-lg font-bold text-slate-800">Laporan Rekapitulasi Absensi Bulanan</h2>
-          <p className="text-xs text-slate-500 font-semibold font-medium">Rekap absensi siswa bulanan standar Kemendikbud dalam sistem sekolah</p>
+          <p className="text-xs text-slate-500 font-semibold font-medium">Rekap absensi siswa bulanan standar Kemendikbud & Blangko Kosong Siap Cetak Manual</p>
         </div>
 
-        {/* Buttons */}
+        {/* Buttons Action Group */}
         {selectedClassId && students.length > 0 && (
-          <div className="flex gap-2 shrink-0">
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            {/* Toggle Pratinjau Blangko Kosong */}
             <button
-              onClick={handleDownloadExcel}
-              className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition shadow-sm cursor-pointer"
-              id="rekap-excel-download-btn"
+              onClick={() => setIsBlankView(!isBlankView)}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition shadow-sm cursor-pointer border ${
+                isBlankView 
+                  ? 'bg-amber-100 border-amber-300 text-amber-900' 
+                  : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+              }`}
+              title="Pratinjau tampilan blangko kosong tanpa strip di layar"
             >
-              <FileSpreadsheet size={14} />
-              Unduh Excel (.xlsx)
+              <FileText size={14} className={isBlankView ? 'text-amber-700' : 'text-slate-500'} />
+              {isBlankView ? 'Mode: Blangko Kosong' : 'Pratinjau Blangko'}
             </button>
-            <button
-              onClick={handleDownloadPDF}
-              className="flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition shadow-sm cursor-pointer"
-              id="rekap-pdf-download-btn"
-            >
-              <FileDown size={14} />
-              Unduh PDF Laporan
-            </button>
+
+            {/* Menu Unduh Blangko Kosong (Tanpa strip & tanpa isi A,I,S) */}
+            <div className="flex items-center gap-1.5 bg-amber-50/70 p-1 rounded-xl border border-amber-200/80">
+              <span className="text-[11px] font-extrabold text-amber-800 px-2 hidden sm:inline">Blangko Kosong:</span>
+              <button
+                onClick={handleDownloadBlankExcel}
+                className="flex items-center gap-1 px-3 py-1.5 bg-white hover:bg-amber-100/60 text-emerald-700 border border-amber-200 rounded-lg text-xs font-bold transition shadow-xs cursor-pointer"
+                title="Unduh blangko kosong Excel tanpa strip & tanpa jumlah A,I,S untuk diisi manual"
+                id="btn-download-blank-excel"
+              >
+                <FileSpreadsheet size={13} className="text-emerald-600" />
+                Excel Kosong
+              </button>
+              <button
+                onClick={handleDownloadBlankPDF}
+                className="flex items-center gap-1 px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-bold transition shadow-xs cursor-pointer"
+                title="Cetak atau unduh blangko kosong PDF siap print untuk absensi manual"
+                id="btn-download-blank-pdf"
+              >
+                <Printer size={13} />
+                Cetak / PDF Kosong
+              </button>
+            </div>
+
+            {/* Menu Unduh Laporan Terisi */}
+            <div className="flex items-center gap-1.5 bg-slate-50 p-1 rounded-xl border border-slate-200">
+              <span className="text-[11px] font-extrabold text-slate-600 px-2 hidden sm:inline">Data Terisi:</span>
+              <button
+                onClick={handleDownloadExcel}
+                className="flex items-center gap-1 px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold transition shadow-xs cursor-pointer"
+                id="rekap-excel-download-btn"
+                title="Unduh rekapitulasi absensi bulanan terisi data format Excel"
+              >
+                <FileSpreadsheet size={13} className="text-emerald-600" />
+                Excel
+              </button>
+              <button
+                onClick={handleDownloadPDF}
+                className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition shadow-xs cursor-pointer"
+                id="rekap-pdf-download-btn"
+                title="Unduh rekapitulasi absensi bulanan terisi data format PDF resmi"
+              >
+                <FileDown size={13} />
+                PDF
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -397,6 +483,19 @@ export default function RekapBulanan({ session, initialClassId, initialMonth, in
                           else if (status === 'I') iCount++;
                           else if (status === 'A') aCount++;
 
+                          // In blank mode: render empty cell without strips or letters
+                          if (isBlankView) {
+                            return (
+                              <td
+                                key={dIdx}
+                                className="py-2 text-center font-bold text-[10px] border-r border-slate-200 bg-white"
+                                title={`Kotak kosong tanggal ${dayVal} untuk absensi manual`}
+                              >
+                                &nbsp;
+                              </td>
+                            );
+                          }
+
                           return (
                             <td
                               key={dIdx}
@@ -422,11 +521,19 @@ export default function RekapBulanan({ session, initialClassId, initialMonth, in
                           );
                         })}
 
-                        {/* Counts summaries */}
-                        <td className="py-2 px-1 w-8 text-center bg-green-50/30 text-green-700 font-bold">{hCount}</td>
-                        <td className="py-2 px-1 w-8 text-center bg-blue-50/30 text-blue-700 font-bold">{sCount}</td>
-                        <td className="py-2 px-1 w-8 text-center bg-amber-50/30 text-amber-700 font-bold">{iCount}</td>
-                        <td className="py-2 px-1 w-8 text-center bg-red-50/30 text-red-700 font-bold">{aCount}</td>
+                        {/* Counts summaries (Empty in blank mode) */}
+                        <td className="py-2 px-1 w-8 text-center bg-green-50/30 text-green-700 font-bold">
+                          {isBlankView ? '' : hCount}
+                        </td>
+                        <td className="py-2 px-1 w-8 text-center bg-blue-50/30 text-blue-700 font-bold">
+                          {isBlankView ? '' : sCount}
+                        </td>
+                        <td className="py-2 px-1 w-8 text-center bg-amber-50/30 text-amber-700 font-bold">
+                          {isBlankView ? '' : iCount}
+                        </td>
+                        <td className="py-2 px-1 w-8 text-center bg-red-50/30 text-red-700 font-bold">
+                          {isBlankView ? '' : aCount}
+                        </td>
                       </tr>
                     );
                   })}

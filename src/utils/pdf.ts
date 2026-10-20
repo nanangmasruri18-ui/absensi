@@ -259,6 +259,196 @@ export function generateMonthlyPDF({
 }
 
 /**
+ * Generates and downloads a BLANK Monthly Attendance PDF (Blangko Kosong Siap Cetak):
+ * - Kolom tanggal 1..daysInMonth berupa kotak kosong bersih tanpa strip (-) untuk ditulis manual
+ * - Kolom jumlah H, S, I, A dikosongkan (tanpa angka 0 atau strip)
+ * - Tanda tangan kepala sekolah dikosongkan (hanya tanda tangan guru kelas / wali kelas di sebelah kanan)
+ * Format: Folio / F4 Landscape (330.2 mm x 215.9 mm)
+ */
+export function generateBlankMonthlyPDF({
+  school,
+  className,
+  homeroomTeacherName,
+  homeroomTeacherNip,
+  monthName,
+  year,
+  daysInMonth,
+  students,
+}: {
+  school: { name: string; address: string; npsn: string };
+  className: string;
+  homeroomTeacherName: string;
+  homeroomTeacherNip?: string;
+  monthName: string;
+  year: number;
+  daysInMonth: number;
+  students: Student[];
+}) {
+  const doc = new jsPDF({
+    orientation: 'landscape',
+    unit: 'mm',
+    format: [215.9, 330.2] // 13 x 8.5 inches landscape (330.2 mm width x 215.9 mm height)
+  });
+
+  const pageWidth = 330.2;
+  const pageHeight = 215.9;
+  const marginX = 10;
+  const printableWidth = pageWidth - (marginX * 2); // 310.2 mm
+
+  // Judul Dokumen Resmi
+  doc.setTextColor(15, 23, 42);
+  doc.setFont('Helvetica', 'bold');
+  doc.setFontSize(16);
+  doc.text('BLANGKO REKAPITULASI ABSENSI SISWA BULANAN', pageWidth / 2, 13, { align: 'center' });
+  
+  doc.setFontSize(13.5);
+  doc.text(school.name.toUpperCase(), pageWidth / 2, 19.5, { align: 'center' });
+  
+  doc.setFont('Helvetica', 'normal');
+  doc.setFontSize(9.5);
+  doc.text(`NPSN: ${school.npsn}  |  Alamat: ${school.address}`, pageWidth / 2, 24.5, { align: 'center' });
+  
+  // Garis ganda kop
+  doc.setDrawColor(15, 23, 42);
+  doc.setLineWidth(1.2);
+  doc.line(marginX, 27.5, pageWidth - marginX, 27.5);
+  doc.setLineWidth(0.4);
+  doc.line(marginX, 28.5, pageWidth - marginX, 28.5);
+
+  // Informasi kelas dan bulan
+  doc.setFont('Helvetica', 'bold');
+  doc.setFontSize(10);
+  doc.text(`Kelas / Rombel : ${className}`, marginX, 35);
+  doc.text(`Wali Kelas        : ${homeroomTeacherName || '-'}`, marginX, 40.5);
+
+  const monthLabel = `Bulan: ${monthName.toUpperCase()}`;
+  const yearLabel = `Tahun Pelajaran: ${year}/${year + 1}`;
+  doc.text(monthLabel, pageWidth - marginX, 35, { align: 'right' });
+  doc.text(yearLabel, pageWidth - marginX, 40.5, { align: 'right' });
+
+  // Kolom header tabel: No, NISN, Nama Siswa, L/P, [1..daysInMonth], H, S, I, A
+  const headers: string[] = ['No', 'NISN', 'Nama Siswa', 'L/P'];
+  for (let d = 1; d <= daysInMonth; d++) {
+    headers.push(String(d));
+  }
+  headers.push('H', 'S', 'I', 'A');
+
+  // Siapkan baris siswa dengan kotak tanggal & kotak A,I,S KOSONG BERSIH (tanpa strip)
+  const bodyData: any[] = [];
+  students.forEach((student, index) => {
+    const row: any[] = [
+      index + 1,
+      student.nisn || student.nis || '',
+      student.name,
+      student.gender
+    ];
+
+    // Kolom tanggal kosong bersih tanpa karakter strip
+    for (let d = 1; d <= daysInMonth; d++) {
+      row.push('');
+    }
+
+    // Kolom H, S, I, A kosong bersih (tanpa angka 0 atau strip)
+    row.push('', '', '', '');
+    bodyData.push(row);
+  });
+
+  // Lebar kolom dinamis
+  const fixedSumColWidth = 6.5;
+  const fixedNonDateWidth = 8 + 22 + 62 + 7 + (4 * fixedSumColWidth);
+  const dayColWidth = Math.floor(((printableWidth - fixedNonDateWidth) / daysInMonth) * 100) / 100;
+
+  const columnStyles: any = {
+    0: { cellWidth: 8, halign: 'center' }, // No
+    1: { cellWidth: 22, halign: 'center' }, // NISN
+    2: { cellWidth: 62, halign: 'left' }, // Nama Siswa
+    3: { cellWidth: 7, halign: 'center' }, // L/P
+  };
+
+  // Kolom tanggal 1..daysInMonth
+  for (let d = 1; d <= daysInMonth; d++) {
+    columnStyles[3 + d] = { cellWidth: dayColWidth, halign: 'center' };
+  }
+
+  // Kolom H, S, I, A
+  const startIndex = 4 + daysInMonth;
+  columnStyles[startIndex] = { cellWidth: fixedSumColWidth, halign: 'center' };
+  columnStyles[startIndex + 1] = { cellWidth: fixedSumColWidth, halign: 'center' };
+  columnStyles[startIndex + 2] = { cellWidth: fixedSumColWidth, halign: 'center' };
+  columnStyles[startIndex + 3] = { cellWidth: fixedSumColWidth, halign: 'center' };
+
+  autoTable(doc, {
+    startY: 45,
+    margin: { left: marginX, right: marginX, bottom: 20 },
+    head: [headers],
+    body: bodyData,
+    theme: 'grid',
+    styles: {
+      font: 'Helvetica',
+      fontSize: 8,
+      cellPadding: 1.5,
+      textColor: [15, 23, 42],
+      lineColor: [148, 163, 184], // slate-400 border grid
+      lineWidth: 0.25,
+      valign: 'middle',
+      minCellHeight: 6.8, // Tinggi kotak nyaman untuk diisi pensil/pulpen
+    },
+    headStyles: {
+      fillColor: [241, 245, 249], // slate-100
+      textColor: [15, 23, 42],
+      fontStyle: 'bold',
+      halign: 'center',
+      lineWidth: 0.35,
+      lineColor: [100, 116, 139],
+    },
+    columnStyles,
+  });
+
+  // Tanda tangan: Kepala sekolah dikosongkan saja, hanya Wali/Guru Kelas di sebelah kanan
+  const totalPages = doc.getNumberOfPages();
+  doc.setPage(totalPages);
+
+  const finalY = (doc as any).lastAutoTable.finalY || 120;
+  let signatureY = finalY + 12;
+
+  if (signatureY + 38 > pageHeight - 15) {
+    doc.addPage();
+    signatureY = 25;
+  }
+
+  const textX = 245;
+  doc.setTextColor(15, 23, 42);
+  doc.setFontSize(10);
+  doc.setFont('Helvetica', 'normal');
+  const dStamp = `Gelora, .................................... ${year}`;
+  doc.text(dStamp, textX, signatureY);
+  doc.text('Guru Kelas / Wali Kelas,', textX, signatureY + 5.5);
+
+  doc.setFont('Helvetica', 'bold');
+  doc.setFontSize(10.5);
+  const teacherLabel = homeroomTeacherName || '( ............................................... )';
+  doc.text(teacherLabel, textX, signatureY + 26);
+  doc.setFont('Helvetica', 'bold');
+  doc.setFontSize(9.5);
+  const nipLabel = homeroomTeacherNip ? `NIP. ${homeroomTeacherNip}` : 'NIP. ...............................................';
+  doc.text(nipLabel, textX, signatureY + 31);
+
+  // Footer halaman
+  const finalPageCount = doc.getNumberOfPages();
+  for (let i = 1; i <= finalPageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setFont('Helvetica', 'normal');
+    doc.setTextColor(100, 116, 139);
+    doc.text(`Halaman ${i} dari ${finalPageCount}`, pageWidth - marginX, pageHeight - 6, { align: 'right' });
+    doc.text(`Blangko Resmi Rekapitulasi Absensi Manual - ${school.name}`, marginX, pageHeight - 6);
+  }
+
+  // Unduh dokumen PDF
+  doc.save(`Blangko_Kosong_Absensi_${className.replace(/\s+/g, '_')}_${monthName}_${year}.pdf`);
+}
+
+/**
  * Generates and downloads a Semester Attendance PDF Report
  * Paper size: F4 / Folio Portrait (8.5 x 13 inches = 215.9 mm x 330.2 mm)
  */

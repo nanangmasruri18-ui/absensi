@@ -502,14 +502,16 @@ async function startServer() {
           ]);
         };
 
-        const [sRes, cRes, tRes, stRes, hRes] = await fetchWithTimeout(
+        const [sRes, cRes, tRes, stRes, hRes, aRes] = await fetchWithTimeout(
           Promise.all([
             sbClient.from('school').select('*').limit(1),
             sbClient.from('classes').select('*'),
             sbClient.from('teachers').select('*'),
             sbClient.from('students').select('*'),
             sbClient.from('holidays').select('*'),
-          ])
+            sbClient.from('attendance').select('*').limit(10000),
+          ]),
+          5000
         );
 
         if (sRes?.data && sRes.data[0]) {
@@ -565,6 +567,17 @@ async function startServer() {
             description: h.description || '',
             updatedAt: h.updated_at,
           }));
+        }
+        if (aRes?.data && aRes.data.length > 0) {
+          databaseCache.attendance = aRes.data.map((a: any) => ({
+            id: a.id || `${a.class_id || a.classId}-${a.student_id || a.studentId}-${a.date}`,
+            classId: a.class_id || a.classId,
+            studentId: a.student_id || a.studentId,
+            date: a.date,
+            status: a.status,
+            notes: a.notes || '',
+            updatedAt: a.updated_at || a.updatedAt || new Date().toISOString(),
+          })).filter((x: any) => x.classId && x.studentId && x.date && x.status);
         }
         persistDb(true);
       }

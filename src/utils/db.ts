@@ -221,15 +221,8 @@ class LocalDB {
     if (!localStorage.getItem(KEYS.HOLIDAYS)) {
       localStorage.setItem(KEYS.HOLIDAYS, JSON.stringify(DEFAULT_HOLIDAYS));
     }
-    const currentAtt = localStorage.getItem(KEYS.ATTENDANCE);
-    let attLen = 0;
-    try {
-      if (currentAtt) attLen = JSON.parse(currentAtt).length;
-    } catch {}
-    if (!currentAtt || attLen < 300) {
-      // Ensure complete July-October records are restored
-      const fullAttendances = generateSampleAttendances();
-      localStorage.setItem(KEYS.ATTENDANCE, JSON.stringify(fullAttendances));
+    if (!localStorage.getItem(KEYS.ATTENDANCE)) {
+      localStorage.setItem(KEYS.ATTENDANCE, '[]');
     }
   }
 

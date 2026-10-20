@@ -22,6 +22,19 @@ if (typeof window !== 'undefined') {
       }
       origWarn.apply(console, args);
     };
+
+    const origErr = console.error;
+    console.error = function (...args: any[]) {
+      const msg = typeof args[0] === 'string' ? args[0] : (args[0]?.message || String(args[0] || ''));
+      if (
+        msg.includes('Multiple GoTrueClient instances detected') ||
+        msg.includes('after `subscribe()`') ||
+        msg.includes('cannot add `postgres_changes`')
+      ) {
+        return; // Suppress harmless duplicate subscription errors
+      }
+      origErr.apply(console, args);
+    };
   } catch {}
 }
 
@@ -574,26 +587,36 @@ export async function uploadAllDataToSupabase(): Promise<{
 
 // Helper to fetch all attendance rows across pages (bypasses PostgREST 1000 limit)
 async function fetchAllAttendanceRows(client: SupabaseClient): Promise<{ data: any[]; error: any }> {
-  const allRows: any[] = [];
-  let page = 0;
-  const pageSize = 1000;
-  while (true) {
-    const { data, error } = await client
-      .from('attendance')
-      .select('*')
-      .order('date', { ascending: true })
-      .order('id', { ascending: true })
-      .range(page * pageSize, (page + 1) * pageSize - 1);
-    
-    if (error) {
-      return { data: allRows, error };
+  try {
+    const allRows: any[] = [];
+    let page = 0;
+    const pageSize = 1000;
+    while (true) {
+      const { data, error } = await client
+        .from('attendance')
+        .select('*')
+        .range(page * pageSize, (page + 1) * pageSize - 1);
+      
+      if (error) {
+        if (page === 0) {
+          // Fallback to select without pagination
+          const fallback = await client.from('attendance').select('*').limit(10000);
+          if (!fallback.error && fallback.data) {
+            return { data: fallback.data, error: null };
+          }
+          return { data: [], error };
+        }
+        break;
+      }
+      if (!data || data.length === 0) break;
+      allRows.push(...data);
+      if (data.length < pageSize) break;
+      page++;
     }
-    if (!data || data.length === 0) break;
-    allRows.push(...data);
-    if (data.length < pageSize) break;
-    page++;
+    return { data: allRows, error: null };
+  } catch (err: any) {
+    return { data: [], error: err };
   }
-  return { data: allRows, error: null };
 }
 
 // Dedicated helper to directly push day's attendance records to Supabase & backend
@@ -952,14 +975,14 @@ export async function fetchAllFromSupabase(force = false): Promise<boolean> {
           // Format & resolve attendance
           if (attendanceRes.data && attendanceRes.data.length > 0) {
             const remoteAttendance: Attendance[] = attendanceRes.data.map((r: any) => ({
-              id: r.id,
-              classId: r.class_id,
-              studentId: r.student_id,
+              id: r.id || `${r.class_id || r.classId}-${r.student_id || r.studentId}-${r.date}`,
+              classId: r.class_id || r.classId,
+              studentId: r.student_id || r.studentId,
               date: r.date,
               status: r.status,
               notes: r.notes || '',
-              updatedAt: r.updated_at,
-            }));
+              updatedAt: r.updated_at || r.updatedAt || new Date().toISOString(),
+            })).filter((a: any) => a.classId && a.studentId && a.date && a.status);
 
             // Read current local records
             let localRecords: Attendance[] = [];
@@ -983,7 +1006,7 @@ export async function fetchAllFromSupabase(force = false): Promise<boolean> {
               } else {
                 const localTime = local.updatedAt ? new Date(local.updatedAt).getTime() : 0;
                 const remoteTime = remote.updatedAt ? new Date(remote.updatedAt).getTime() : 0;
-                if (remoteTime > localTime) {
+                if (remoteTime >= localTime) {
                   recordMap.set(remote.id, remote);
                 }
               }
@@ -996,45 +1019,28 @@ export async function fetchAllFromSupabase(force = false): Promise<boolean> {
               return (a.studentId || '').localeCompare(b.studentId || '');
             });
 
-            // Check if actual data values changed (ignore array order / formatting)
-            let isDataDifferent = false;
-            if (localRecords.length !== mergedAttendance.length) {
-              isDataDifferent = true;
-            } else {
-              for (let i = 0; i < mergedAttendance.length; i++) {
-                const m = mergedAttendance[i];
-                const l = localRecords[i];
-                if (!l || l.id !== m.id || l.status !== m.status || l.notes !== m.notes) {
-                  isDataDifferent = true;
-                  break;
+            const nextRaw = JSON.stringify(mergedAttendance);
+            localStorage.setItem(KEYS.ATTENDANCE, nextRaw);
+
+            // Notify UI smoothly and update components
+            broadcastLocalUpdate(mergedAttendance.length, 'supabase-cloud');
+
+            // Sync to local server cache with internal-sync header to avoid echo loop
+            fetch('/api/attendance', {
+              method: 'POST',
+              headers: { 
+                'Content-Type': 'application/json',
+                'x-sync-source': 'internal-sync'
+              },
+              body: nextRaw,
+            })
+              .then(async (res) => {
+                if (res.ok) {
+                  const data = await res.json();
+                  if (data?.updatedAt) lastKnownServerTime = data.updatedAt;
                 }
-              }
-            }
-
-            if (isDataDifferent) {
-              const nextRaw = JSON.stringify(mergedAttendance);
-              localStorage.setItem(KEYS.ATTENDANCE, nextRaw);
-
-              // Notify UI smoothly
-              broadcastLocalUpdate(mergedAttendance.length, 'supabase-cloud');
-
-              // Sync to local server cache with internal-sync header to avoid echo loop
-              fetch('/api/attendance', {
-                method: 'POST',
-                headers: { 
-                  'Content-Type': 'application/json',
-                  'x-sync-source': 'internal-sync'
-                },
-                body: nextRaw,
               })
-                .then(async (res) => {
-                  if (res.ok) {
-                    const data = await res.json();
-                    if (data?.updatedAt) lastKnownServerTime = data.updatedAt;
-                  }
-                })
-                .catch(() => {});
-            }
+              .catch(() => {});
 
             updateSyncState({
               status: 'synced',
@@ -1370,8 +1376,13 @@ export function initRealtimeSync(): () => void {
       if (!supabase) return;
       currentRealtimeClient = supabase;
 
-      // Gunakan nama channel unik agar tidak bertabrakan dengan channel yang sedang unsubscribe
-      const channelId = `absensi-cloud-${Math.random().toString(36).substring(2, 9)}`;
+      // Clean up any stale channels on client to strictly prevent duplicate subscription collisions
+      try {
+        currentRealtimeClient.removeAllChannels();
+      } catch {}
+
+      // Unique channel name with timestamp to avoid collision with any lingering subscription
+      const channelId = `absensi-cloud-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
       const channel = supabase.channel(channelId);
 
       channel
